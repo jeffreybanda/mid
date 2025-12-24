@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ice="http://www.icesoft.com/icefaces/component">
+
+<h:body>
+
+
+	<ui:composition template="/theme/genesis.xhtml">
+		<ui:define name="title">Welcome to Genesis</ui:define>
+
+		<ui:define name="header">
+
+			<script type='text/javascript' src="#{Pathing.contextPath }/index.js">
+			</script>
+
+
+		</ui:define>
+		
+		<ui:define name="pagetitle">
+					Welcome to Genesis -
+					<h:outputText styleClass="outputText" id="productName"
+						value="#{pc_Index.prodName}"></h:outputText>
+			</ui:define> 
+
+
+		
+
+		
+		
+		<ui:define name="body">
+
+		<table width="100%" border="0" cellpadding="0" cellspacing="0">
+			<tbody>
+				<tr>
+					<td align="left" valign="top" width="100%" nowrap="nowrap"
+						height="300"><ice:outputText styleClass="outputText"
+							id="column1" value="#{pc_Index.column1Text}" escape="false"></ice:outputText>
+					</td>
+
+				</tr>
+				<tr>
+					<td align="left" valign="top" width="100%" nowrap="nowrap">
+					
+					<ice:outputText
+							styleClass="outputText" id="column2" value="#{pc_Index.newsText}"
+							escape="false"></ice:outputText></td>
+				</tr>
+			</tbody>
+		</table>
+
+</ui:define>
+
+	</ui:composition>
+
+</h:body>
+
+
+
+</html>
