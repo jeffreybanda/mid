@@ -94,7 +94,7 @@ public class MainFrame extends JFrame {
 				super.windowClosing(e);
 			}
 		});
-		logging.setMessage("MainFrame created successfully.");
+		
 		this.setVisible(true);
 
 	}

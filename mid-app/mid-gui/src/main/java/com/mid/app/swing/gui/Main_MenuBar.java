@@ -51,7 +51,7 @@ public class Main_MenuBar {
 			defaultTheme, mnitmAero, mnitmBernstain,
 			mnitmMint, mnitmMcwin, mnitmAcryl, mnitmNoire, mnitmLuna,
 			aboutDeveloper, mnitmTexture,
-			shareYourOpinion, jobProps, calculator;
+			shareYourOpinion,  calculator;
 
 	// getter method for getting the modified menubar from another class
 	public JMenuBar getMenuBar() {
@@ -105,6 +105,7 @@ public class Main_MenuBar {
 		mnTools = new JMenu("Tools");
 		mnTools.setFont(new Font("Microsoft Sans Serif", Font.BOLD, 13));
 		menuBar.add(mnTools);
+		
 
 		// add calculator application section to menubar
 		calculator = new JMenuItem("Calculator");
@@ -198,11 +199,7 @@ public class Main_MenuBar {
 		utils.setToolTipText("Creator permission required!");
 		menuBar.add(utils);
 
-		jobProps = new JMenuItem("Run Scheduled Job");
-		jobProps.setFont(new Font("Microsoft Sans Serif", Font.PLAIN, 14));
-		jobProps.setIcon(new ImageIcon(Main_MenuBar.class.getResource("/icons/login_database.png")));
-		jobProps.addActionListener(doJobAction());
-		utils.add(jobProps);
+	
 
 		usersMenu = new JMenu("Users");
 		usersMenu.setFont(new Font("Microsoft Sans Serif", Font.BOLD, 13));
@@ -254,29 +251,6 @@ public class Main_MenuBar {
 
 	}
 
-	private ActionListener doJobAction() {
-		final ActionListener listener = (final ActionEvent e) -> {
-			// here creating schema and importing tables.
-			final DialogFrame frame = new DialogFrame();
-			frame.setMessage("Attention !!\nYou are about to run a continuos job!");
-			frame.btnYes.addActionListener(ActionListener -> {
-				frame.dispose();
-				try {
-
-					runJob();
-				} catch (final Exception e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-
-			});
-
-			frame.btnNo.addActionListener(ActionListener -> {
-				frame.dispose();
-			});
-			frame.setVisible(true);
-		};
-		return listener;
-	}
+	
 
 }

@@ -1,2740 +1,1017 @@
-
 package com.mid.app.swing.gui;
 
-import static com.mid.app.http.utils.ConnectionUtils.checkConnectionToPortal;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.mid.app.politem.model.PolItem;
+import com.mid.app.politemben.model.PolItemBen;
+import com.mid.app.polmaster.model.PolMaster;
+import com.mid.app.polmtrveh.model.PolMtrVeh;
+import com.mid.app.polrisk.model.PolRisk;
+import com.mid.app.swing.model.ImportCriteria;
+import com.mid.app.swing.model.ImportResult;
+import com.mid.app.swing.service.MotorPolicyJsonBuilder;
+import com.mid.app.swing.service.PolicyDataService;
+import com.mid.app.swing.service.PolicyImportService;
+import com.mid.app.swing.service.PolicyValidationService;
+import com.mid.app.utils.LoggingEngine;
+import com.mid.app.xmm600.model.Xmm600;
+import com.toedter.calendar.JDateChooser;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import javax.swing.Action;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.KeyStroke;
-import javax.swing.SwingConstants;
-import javax.swing.SwingWorker;
-import javax.swing.UIManager;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.SoftBevelBorder;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.*;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.TextAction;
-
-import org.apache.commons.validator.GenericValidator;
-import org.apache.http.HttpEntity;
-import org.apache.http.StatusLine;
-import org.apache.http.auth.AuthenticationException;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.util.EntityUtils;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.jayway.jsonpath.JsonPath;
-import com.mid.app.common.json.JsonReader;
-import com.mid.app.common.json.JsonWriter;
-import com.mid.app.common.model.HttpCode;
-import com.mid.app.common.utils.DbCommandExecutor;
-import com.mid.app.customerdata.model.CustomerData;
-import com.mid.app.data.model.Data;
-import com.mid.app.http.utils.ConnectionUtils;
-import com.mid.app.http.utils.HttpAuthentication;
-import com.mid.app.policydata.model.PolicyData;
-import com.mid.app.politem.model.PolItem;
-import com.mid.app.politem.repository.PolItemRepository;
-import com.mid.app.politemben.model.PolItemBen;
-import com.mid.app.politemben.repository.PolItemBenRepository;
-import com.mid.app.polmaster.model.PolMaster;
-import com.mid.app.polmaster.repository.PolMasterRepository;
-import com.mid.app.polmtrveh.model.PolMtrVeh;
-import com.mid.app.polmtrveh.repository.PolMtrVehRepository;
-import com.mid.app.polrisk.model.PolRisk;
-import com.mid.app.polrisk.repository.PolRiskRepository;
-import com.mid.app.swing.utils.ChangeComponentOrientation;
-import com.mid.app.ui.extras.CustomTableHeaderRenderer;
-import com.mid.app.ui.extras.PolicyTableRenderer;
-import com.mid.app.utils.DateUtils;
-import com.mid.app.utils.LoggingEngine;
-import com.mid.app.utils.MapCreator;
-import com.mid.app.xmm023.model.Xmm023;
-import com.mid.app.xmm023.repository.Xmm023Repository;
-import com.mid.app.xmm106.repository.Xmm106Repository;
-import com.mid.app.xmm600.model.Xmm600;
-import com.mid.app.xmm600.repository.Xmm600Repository;
-import com.toedter.calendar.JDateChooser;
+import java.awt.*;
+import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.*;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
 
 public class Main_Screen extends JPanel implements ActionListener, PropertyChangeListener {
-
-	private JTable table;
-	private Date convertedDate;
-	private BigDecimal pctIncBaseAP = new BigDecimal(0.0D);
-	private JPanel buttonPanel;
-	private JProgressBar progressBar;
-	private Task task;
-	private JTextField polNoField;
-
-	private JScrollPane scrollPane;
-
-	private DefaultTableModel model;
-	private JTextField vehRegRefField;
-
-	private static final long serialVersionUID = 1L;
-
-	private JButton importBtn, findBtn, validateBtn, historyBtn;
-	private JDateChooser startDatePicker, endDatePicker, tranDatePicker;
-	private ChangeComponentOrientation componentOrientation;
-	private JLabel startdateLbl, endDateLbl, polNoLbl, agencyRefLbl;
-	private String result;
-	private final String[] rezColsName = { "TRAN DATE", "POLICY NUMBER", "STICKER NUMBER", "INCEPTION", "EXPIRY",
-			"CUSTOMER NAME", "COVER TYPE", "VEHICLE REG", "MAKE", "MODEL" };
-	private final CustomTableHeaderRenderer THR = new CustomTableHeaderRenderer();
-	private final PolicyTableRenderer customTCR = new PolicyTableRenderer();
-	private static LoggingEngine logging;
-	
-	PolMasterRepository polMasterRepository;
-	PolMtrVehRepository polMtrVehRepository;
-	PolRiskRepository polRiskRepository;
-	PolItemRepository polItemRepository;
-	PolItemBenRepository polItemBenRepository;
-	Xmm600Repository xmm600Repository;
-	Xmm106Repository xmm106Repository;
-	Xmm023Repository xmm023Repository;
-	DbCommandExecutor dbCommandExecutor;
-	EntityManager em;
-	EntityManagerFactory emf;
-	private String polNo = null;
-	String myDocuments = new JFileChooser().getFileSystemView().getDefaultDirectory().toString();
-
-	private boolean skipPolicy = true;
-	private boolean branchExists = true;
-
-	@SuppressWarnings("rawtypes")
-	Map mainMap = new LinkedHashMap();
-
-	public Main_Screen() {
-
-		logging = LoggingEngine.getInstance();
-		logging.setReady(Main_Screen.class.getName());
-		logging.changeLoggingLevel(Level.FINE);
-		logging.setConsoleLogging(false);
-
-		componentOrientation = new ChangeComponentOrientation();
-		componentOrientation.setThePanel(this);
-
-		setLayout(new BorderLayout(0, 0));
-
-		buttonPanel = new JPanel();
-		buttonPanel.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
-		buttonPanel.setAutoscrolls(true);
-		buttonPanel.setPreferredSize(new Dimension(10, 65));
-		add(buttonPanel, BorderLayout.NORTH);
-
-		importBtn = new JButton("Import");
-		importBtn.setBounds(6, 12, 155, 45);
-		importBtn.setIcon(new ImageIcon(Main_Screen.class.getResource("/icons/main_new_rez.png")));
-		importBtn.setHorizontalTextPosition(SwingConstants.RIGHT);
-		importBtn.setPreferredSize(new Dimension(150, 33));
-		importBtn.setBorder(new SoftBevelBorder(BevelBorder.RAISED, null, null, null, null));
-		importBtn.setFont(new Font("Arial", Font.BOLD, 12));
-		importBtn.setEnabled(false);
-		importBtn.setActionCommand("start");
-		importBtn.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-
-				try {
-
-					if (checkConnectionToPortal()) {
-						createJsonRecords();
-					} else {
-						setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-
-					}
-
-				} catch (final AuthenticationException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (final ClientProtocolException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (final IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-
-			}
-
-		});
-
-		buttonPanel.setLayout(null);
-		buttonPanel.add(importBtn);
-
-		buttonPanel.setLayout(null);
-		// buttonPanel.add(historyBtn);
-
-		validateBtn = new JButton("Validate Records");
-		// validateBtn.setBounds(810, 9, 400, 45);
-		// 690, 8, 114, 48
-		validateBtn.setBounds(810, 9, 200, 48);
-		validateBtn.setIcon(new ImageIcon(Main_Screen.class.getResource("/icons/main_new_rez.png")));
-		validateBtn.setHorizontalTextPosition(SwingConstants.RIGHT);
-		validateBtn.setPreferredSize(new Dimension(150, 33));
-		validateBtn.setBorder(new SoftBevelBorder(BevelBorder.RAISED, null, null, null, null));
-		validateBtn.setFont(new Font("Arial", Font.BOLD, 12));
-		validateBtn.setEnabled(true);
-		validateBtn.setActionCommand("start");
-		validateBtn.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-
-				try {
-					validateJsonRecords();
-				} catch (AuthenticationException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (ClientProtocolException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-
-			}
-
-		});
-
-		buttonPanel.setLayout(null);
-		buttonPanel.add(validateBtn);
-
-		final JSeparator separator = new JSeparator();
-		separator.setBackground(Color.DARK_GRAY);
-		separator.setBounds(175, 12, 13, 45);
-		separator.setOrientation(SwingConstants.VERTICAL);
-		separator.setFocusable(true);
-		separator.setForeground(Color.DARK_GRAY);
-		separator.setAutoscrolls(true);
-		separator.setPreferredSize(new Dimension(10, 20));
-		buttonPanel.add(separator);
-
-		startdateLbl = new JLabel("Start date : ");
-		startdateLbl.setBounds(192, 8, 79, 26);
-		buttonPanel.add(startdateLbl);
-
-		startDatePicker = new JDateChooser();
-		startDatePicker.setDate(convertedDate);
-		startDatePicker.setDateFormatString("yyyy-MM-dd");
-		startDatePicker.setBounds(275, 8, 155, 26);
-		buttonPanel.add(startDatePicker);
-
-		endDateLbl = new JLabel("End date : ");
-		endDateLbl.setBounds(192, 35, 79, 26);
-		buttonPanel.add(endDateLbl);
-
-		endDatePicker = new JDateChooser();
-		endDatePicker.setDate(convertedDate);
-		endDatePicker.setDateFormatString("yyyy-MM-dd");
-		endDatePicker.setBounds(275, 35, 155, 26);
-		buttonPanel.add(endDatePicker);
-
-		polNoLbl = new JLabel("Policy Number : ");
-		polNoLbl.setBounds(442, 6, 94, 26);
-		buttonPanel.add(polNoLbl);
-
-		agencyRefLbl = new JLabel("Veh Reg No : ");
-		agencyRefLbl.setBounds(442, 33, 94, 26);
-		buttonPanel.add(agencyRefLbl);
-
-		findBtn = new JButton("Search");
-		findBtn.setIcon(new ImageIcon(Main_Screen.class.getResource("/icons/main_find.png")));
-		findBtn.setPreferredSize(new Dimension(150, 33));
-		findBtn.setHorizontalTextPosition(SwingConstants.RIGHT);
-		findBtn.setFont(new Font("Arial", Font.BOLD, 12));
-		findBtn.setBorder(new SoftBevelBorder(BevelBorder.RAISED, null, null, null, null));
-		findBtn.setBounds(690, 8, 114, 48);
-		findBtn.setActionCommand("start");
-		findBtn.addActionListener(this);
-		buttonPanel.add(findBtn);
-
-		JPopupMenu menu = new JPopupMenu();
-		Action cut = new DefaultEditorKit.CutAction();
-		cut.putValue(Action.NAME, "Cut");
-		cut.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
-		menu.add(cut);
-
-		Action copy = new DefaultEditorKit.CopyAction();
-		copy.putValue(Action.NAME, "Copy");
-		copy.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
-		menu.add(copy);
-
-		Action paste = new DefaultEditorKit.PasteAction();
-		paste.putValue(Action.NAME, "Paste");
-		paste.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
-		menu.add(paste);
-
-		Action selectAll = new SelectAll();
-		menu.add(selectAll);
-
-		polNoField = new JTextField();
-		polNoField.setBounds(535, 6, 143, 26);
-		polNoField.setFont(new Font("Arial", Font.BOLD, 13));
-		polNoField.setColumns(10);
-		buttonPanel.add(polNoField);
-		polNoField.setComponentPopupMenu(menu);
-
-		vehRegRefField = new JTextField();
-		vehRegRefField.setBounds(535, 33, 143, 26);
-		vehRegRefField.setFont(new Font("Arial", Font.BOLD, 13));
-		vehRegRefField.setColumns(10);
-		buttonPanel.add(vehRegRefField);
-
-		model = new DefaultTableModel(rezColsName, 0);
-
-		customTCR.setHorizontalAlignment(SwingConstants.CENTER);
-		THR.setHorizontalAlignment(SwingConstants.CENTER);
-
-		table = new JTable(model);
-		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-		table.setGridColor(UIManager.getColor("InternalFrame.inactiveTitleForeground"));
-		table.getTableHeader().setDefaultRenderer(THR);
-		table.setDefaultRenderer(Object.class, customTCR);
-		table.setFont(new Font("Dialog", Font.PLAIN, 14));
-		table.setBackground(UIManager.getColor("InternalFrame.borderColor"));
-
-		scrollPane = new JScrollPane();
-		scrollPane.setViewportView(table);
-		add(scrollPane, BorderLayout.CENTER);
-
-	}
-
-	class Task extends SwingWorker<Void, Void> {
-		/*
-		 * Main task. Executed in background thread.
-		 */
-		@Override
-		public Void doInBackground() {
-			final Random random = new Random();
-			int progress = 0;
-			// Initialize progress property.
-			setProgress(0);
-			while (progress < 100) {
-				// Sleep for up to one second.
-				try {
-
-					Thread.sleep(random.nextInt(1000));
-				} catch (final InterruptedException ignore) {
-				}
-				// Make random progress.
-				progress += random.nextInt(10);
-				setProgress(Math.min(progress, 100));
-			}
-			return null;
-		}
-
-		/*
-		 * Executed in event dispatching thread
-		 */
-		@Override
-		public void done() {
-			Toolkit.getDefaultToolkit().beep();
-			findBtn.setEnabled(true);
-			setCursor(null); // turn off the wait cursor
-
-		}
-
-	}
-
-	@Override
-	public void actionPerformed(final ActionEvent evt) {
-
-		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-		task = new Task();
-		task.addPropertyChangeListener(this);
-		findRecord();
-		// task.execute();
-		findBtn.setEnabled(true);
-
-	}
-
-	@Override
-	public void propertyChange(final PropertyChangeEvent evt) {
-		if ("progress" == evt.getPropertyName()) {
-			final int progress = (Integer) evt.getNewValue();
-			progressBar.setValue(progress);
-
-		}
-	}
-
-	public List<PolMaster> selectionHistoryCriteria() {
-		List<PolMaster> polMasters = null;
-
-		final LocalDate startDate = LocalDate.parse("2020-01-01");
-		final LocalDate endDate = LocalDate.parse("2020-01-20");
-
-		prepareDataFlow();
-		return polMasters = dbCommandExecutor.executeCommand(() -> {
-
-			return polMasterRepository.findPolMasterRecordByTranDate(DateUtils.convertToDateViaInstant(startDate),
-					DateUtils.convertToDateViaInstant(endDate));
-		});
-
-	}
-
-	public List<PolMaster> selectionCriteria() {
-		List<PolMaster> polMasters = null;
-
-		if (polNoField.getText().length() > 0) {
-			prepareDataFlow();
-			polMasters = dbCommandExecutor.executeCommand(() -> {
-
-				return polMasterRepository.findPolMasterRecordByPolNo(polNoField.getText());
-			});
-
-		} else if (vehRegRefField.getText().length() > 0) {
-			prepareDataFlow();
-			polNo = dbCommandExecutor.executeCommand(() -> {
-				return polMtrVehRepository.findPolNoByVehReg(vehRegRefField.getText());
-			});
-			if (polNo != null) {
-				polMasters = dbCommandExecutor.executeCommand(() -> {
-
-					return polMasterRepository.findPolMasterRecordByPolNo(polNo);
-				});
-			}
-		} else if (startDatePicker.getDate() != null && endDatePicker.getDate() != null) {
-
-			// get dates from date pickers
-			final LocalDate startDate = startDatePicker.getDate().toInstant().atZone(ZoneId.systemDefault())
-					.toLocalDate();
-			final LocalDate endDate = endDatePicker.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-			// compare if start date greater than end date
-			if (startDate.isAfter(endDate)) {
-				JOptionPane.showMessageDialog(null, "Start date is after end date!", JOptionPane.MESSAGE_PROPERTY,
-						JOptionPane.WARNING_MESSAGE);
-			} else {
-				prepareDataFlow();
-				polMasters = dbCommandExecutor.executeCommand(() -> {
-
-					return polMasterRepository.findPolMasterRecordByTranDate(
-							DateUtils.convertToDateViaInstant(startDate), DateUtils.convertToDateViaInstant(endDate));
-				});
-			}
-		} else {
-
-			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-			findBtn.setEnabled(true);
-			JOptionPane.showMessageDialog(null, "Please Select Criteria to search on!", JOptionPane.MESSAGE_PROPERTY,
-					JOptionPane.WARNING_MESSAGE);
-		}
-
-		return polMasters;
-
-	}
-
-	
-
-	@SuppressWarnings("unchecked")
-	public void createJsonRecords() throws AuthenticationException, ClientProtocolException, IOException {
-
-		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-		importBtn.setEnabled(false);
-
-		// createBranches();
-
-		final List<PolMaster> polMasters = selectionCriteria();
-
-		model.setRowCount(0);
-
-		if (polMasters != null) {
-
-			for (final PolMaster polMaster : polMasters) {
-				skipPolicy = dbCommandExecutor.executeCommand(() -> {
-					return polMasterRepository.isSkipPolicy(polMaster.getPolNo(), polMaster.getRenCnt());
-				});
-
-				if (!skipPolicy) {
-					List<PolMtrVeh> polMtrVehs;
-
-					if (vehRegRefField.getText().length() > 0) {
-
-						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-							return polMtrVehRepository.findPolMtrVehicleByVehRegNo(polMaster.getPolNo(),
-									polMaster.getRenCnt(), polMaster.getEndtCnt(), vehRegRefField.getText());
-						});
-					} else {
-						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-							return polMtrVehRepository.findPolMtrVehicleList(polMaster.getPolNo(),
-									polMaster.getRenCnt(), polMaster.getEndtCnt());
-						});
-					}
-
-					for (final PolMtrVeh mtrVeh : polMtrVehs) {
-
-						final List<PolRisk> polRisks = dbCommandExecutor.executeCommand(() -> {
-							return polRiskRepository.findPolRiskRecord(polMaster.getPolNo(), polMaster.getRenCnt(),
-									polMaster.getEndtCnt(), mtrVeh.getRiskGrp(), mtrVeh.getRiskNo());
-						});
-
-						for (final PolRisk polRisk : polRisks) {
-
-							pctIncBaseAP = dbCommandExecutor.executeCommand(() -> {
-								return xmm106Repository.findPctIncBaseAPForClass(polRisk.getBusinessClass(),
-										mtrVeh.getCoverType());
-							});
-
-							PolItem polItem = polItemRepository.findByPrimaryKey(polMaster.getPolNo(),
-									polMaster.getRenCnt(), polMaster.getEndtCnt(), mtrVeh.getRiskGrp(),
-									mtrVeh.getRiskNo(), mtrVeh.getItemNo());
-
-							final List<PolItemBen> itemBens = dbCommandExecutor.executeCommand(() -> {
-								return polItemBenRepository.findPolItemBenRecord(polMaster.getPolNo(),
-										polMaster.getRenCnt(), polMaster.getEndtCnt(), mtrVeh.getRiskGrp(),
-										mtrVeh.getRiskNo(), mtrVeh.getItemNo());
-							});
-
-							final List<Xmm600> xmm600IntermediaryList = dbCommandExecutor.executeCommand(() -> {
-								return xmm600Repository.findInterMediary(polMaster.getAgent());
-
-							});
-
-							final List<Xmm600> xmm600ClientList = dbCommandExecutor.executeCommand(() -> {
-								return xmm600Repository.findClients(polMaster.getInsured());
-
-							});
-
-							for (final Xmm600 xmm600InterMediary : xmm600IntermediaryList) {
-
-								if (recordIsValidated(polMaster, polRisk, mtrVeh, itemBens, xmm600ClientList,
-										xmm600IntermediaryList)) {
-
-									System.out.println(polMaster.getPolNo());
-
-									result = buildMotorPolicyJson(polMaster, polRisk, mtrVeh, polItem, itemBens);
-									importJsonRecords(result, polMaster.getPolNo());
-									System.out.println(result);
-								} else {
-
-								}
-							}
-						}
-					}
-				}
-			}
-
-		}
-
-		;
-
-		importBtn.setEnabled(false);
-
-		setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-
-		mainMap.clear();
-		// printWriter.close();
-		em.close();
-		emf.close();
-		JOptionPane.showMessageDialog(null, "Import Process Completed !", "Data Import",
-				JOptionPane.INFORMATION_MESSAGE);
-
-	}
-
-	private String buildMotorPolicyJson(PolMaster polMaster, PolRisk polRisk, PolMtrVeh polMtrVeh, PolItem polItem, List<PolItemBen> itemBens) {
-
-		// Root
-		JsonObject root = new JsonObject();
-		
-		String productCode =getCoverType( polMtrVeh);
-
-		// =====================
-		// data object
-		// =====================
-		JsonObject data = new JsonObject();
-		data.addProperty("branchCode", polMaster.getBranch());
-		data.addProperty("productCode", productCode);
-		data.addProperty("intermediaryCode", polMaster.getAcctNo1());
-		data.addProperty("subintermediaryCode", "null");
-		data.addProperty("riskTypeCode",getScheduleCode( polMtrVeh));
-		data.addProperty("companyAssignedPolicyNumber", polMaster.getPolNo());
-		// =====================
-		// vehicleData
-		// =====================
-		JsonObject vehicleData = new JsonObject();
-		vehicleData.addProperty("registrationNumber", polMtrVeh.getVehRegNo());
-		vehicleData.addProperty("chassisNumber", polMtrVeh.getChassisNo());
-		vehicleData.addProperty("make", polMtrVeh.getVehMake());
-		vehicleData.addProperty("model", polMtrVeh.getModelDesc());
-		vehicleData.addProperty("manufacturingYear",Integer.parseInt(polMtrVeh.getYrManu()));
-		vehicleData.addProperty("registrationYear", polMtrVeh.getRegYr());
-		vehicleData.addProperty("vehicleColour", polMtrVeh.getColour());
-		vehicleData.addProperty("bodyType", polMtrVeh.getVehBody());
-		vehicleData.addProperty("seatingCapacity", polMtrVeh.getNoSeats());
-		vehicleData.addProperty("cubicCapacity", polMtrVeh.getEngineCC());
-		vehicleData.addProperty("vehicleUsage", polMtrVeh.getVehUsg());
-		vehicleData.addProperty("fuelType", "NA");
-		vehicleData.addProperty("vehicleValue", polItem.getuOM1Val());
-		vehicleData.addProperty("verified", true);
-
-		data.add("vehicleData", vehicleData);
-
-		// =====================
-		// customerData
-		// =====================
-		JsonObject customerData = new JsonObject();
-		
-		Optional<Xmm600> optClient = xmm600Repository.findClient(polMaster.getInsured());
-		Xmm600 xmm600 = null;
-		if(optClient.isPresent()) {
-			xmm600 = optClient.get();
-		}
-		
-		//Xmm600 xmm600 = xmm600Repository.findClient(productCode):
-		customerData.addProperty("isActive", true);
-		customerData.addProperty("type", "INDIVIDUAL");
-		customerData.addProperty("title", getTitle(xmm600));
-		customerData.addProperty("firstName", resolveFirstName(polMaster));
-		customerData.addProperty("lastName", polMaster.getInsdName1());
-		customerData.addProperty("gender",getGender(xmm600));
-		customerData.addProperty("dateOfBirth",convertToMIDDate( xmm600.getBirthday().toString()));
-		customerData.addProperty("nationality", "GH");
-		customerData.addProperty("ghanaCardNumber", "GHA-994456789-0");
-		customerData.addProperty("email", xmm600.getEmail().equals("") ? null : xmm600.getEmail());
-		customerData.addProperty("phoneNumber", xmm600.getTelno7());
-		customerData.addProperty("digitalAddress", "GA-123-4567");
-		customerData.addProperty("residentialAddress", polMaster.getInsdAddr1());
-		customerData.addProperty("occupation", polMaster.getOccupation().equals("")? "NA":polMaster.getOccupation());
-
-		data.add("customerData", customerData);
-
-		// =====================
-		// policyData
-		// =====================
-		JsonObject policyData = new JsonObject();
-		policyData.addProperty("startDate",convertToMIDDate( polMaster.getComDate().toString()));
-		policyData.addProperty("expiryDate",convertToMIDDate( polMaster.getExpiryDate().toString()));
-		policyData.addProperty("sumInsured", polItem.getuOM1Val().divide(polMaster.getBillCurrRate(), 2, RoundingMode.HALF_UP));
-		policyData.addProperty("grossPremium", 7280.0);
-		policyData.addProperty("type", "NEW_BUSINESS");
-		policyData.addProperty("transactionDate",convertToMIDDate(  polMaster.getTranDate().toString()));
-		policyData.addProperty("excessBought", false);
-		policyData.addProperty("noClaimDiscount", 0);
-		policyData.addProperty("earnedNoClaimDiscount", 0);
-		policyData.addProperty("calculationType", "FULL_YEAR");
-
-		data.add("policyData", policyData);
-
-		// =====================
-		// attach data to root
-		// =====================
-		root.add("data", data);
-
-		return root.toString();
-	}
-	
-	private String resolveFirstName(PolMaster polMaster) {
-	    if (polMaster.getInsdName2() != null && !polMaster.getInsdName2().trim().isEmpty()) {
-	        return polMaster.getInsdName2();
-	    }
-
-	    String insdName1 = polMaster.getInsdName1();
-	    if (insdName1 != null && !insdName1.trim().isEmpty()) {
-	        return insdName1.trim().split("\\s+")[0];
-	    }
-
-	    return "";
-	}
-
-	
-	private String getScheduleCode(PolMtrVeh mtrVeh) {
-		boolean foundScheduleCode =false;
-		String scheduleCode = null;
-		
-		
-		 final InputStream is = Main_Screen.class.getResourceAsStream(System.getProperty("PropFile"));
-	        final Properties propSchedule = new Properties();
-	        
-	        try {
-				propSchedule.load(is);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		
-	        
-	        
-	        
-	        
-	        @SuppressWarnings("unchecked")
-		Enumeration<String> enums = (Enumeration<String>) propSchedule.propertyNames();
-		while (enums.hasMoreElements() && (!foundScheduleCode)) {
-			String key = enums.nextElement();
-			System.out.println("Key is : " + key + " Schedule Code is : " + mtrVeh.getCertRef());
-			String value = propSchedule.getProperty(key);
-			if (mtrVeh.getCertRef().equalsIgnoreCase(key)) {
-				foundScheduleCode = true;
-				scheduleCode = value;
-			}
-
-		}
-
-		if (!foundScheduleCode) {
-			scheduleCode = "PRIVATE_INDIVIDUAL_X1";
-			foundScheduleCode = false;
-		}
-
-		return scheduleCode;
-		
-	}
-	
-private static String convertToMIDDate(String input) {
-        DateTimeFormatter inputFormatter =
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S");
-
-        DateTimeFormatter outputFormatter =
-                DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-        LocalDateTime dateTime =
-                LocalDateTime.parse(input, inputFormatter);
-
-        return dateTime.format(outputFormatter);
+    
+    // UI Components
+    private JTable table;
+    private DefaultTableModel model;
+    private JButton importBtn, findBtn, validateBtn;
+    private JTextField polNoField, vehRegRefField;
+    private JDateChooser startDatePicker, endDatePicker;
+    private JProgressBar progressBar;
+    private JLabel statusLabel;
+    
+    // Modern UI colors - softer, more professional palette
+    private static final Color PRIMARY_COLOR = new Color(0, 112, 192); // Professional blue
+    private static final Color SECONDARY_COLOR = new Color(0, 153, 204); // Light blue
+    private static final Color ACCENT_COLOR = new Color(76, 175, 80); // Green
+    private static final Color BACKGROUND_COLOR = new Color(248, 248, 248); // Very light gray
+    private static final Color PANEL_BACKGROUND = Color.WHITE;
+    private static final Color TABLE_HEADER_COLOR = new Color(51, 51, 51); // Dark gray
+    private static final Color TABLE_SELECTION_COLOR = new Color(229, 243, 255); // Light blue selection
+    private static final Color TABLE_GRID_COLOR = new Color(230, 230, 230);
+    private static final Color BORDER_COLOR = new Color(204, 204, 204);
+    
+    // Modern fonts
+    private static final Font HEADER_FONT = new Font("Segoe UI", Font.BOLD, 14);
+    private static final Font LABEL_FONT = new Font("Segoe UI", Font.PLAIN, 12);
+    private static final Font BUTTON_FONT = new Font("Segoe UI Semibold", Font.PLAIN, 12);
+    private static final Font TEXT_FIELD_FONT = new Font("Segoe UI", Font.PLAIN, 12);
+    private static final Font TABLE_FONT = new Font("Segoe UI", Font.PLAIN, 11);
+    private static final Font TABLE_HEADER_FONT = new Font("Segoe UI Semibold", Font.BOLD, 12);
+    private static final Font TITLE_FONT = new Font("Segoe UI Light", Font.BOLD, 28);
+    
+    // Services
+    private final PolicyImportService importService;
+    private final PolicyValidationService validationService;
+    private final MotorPolicyJsonBuilder jsonBuilder;
+    private final PolicyDataService dataService;
+    private final LoggingEngine logging;
+    
+    // Constants
+    private static final String[] COLUMN_NAMES = {
+        "TRAN DATE", "POLICY NUMBER", "STICKER NUMBER", "INCEPTION", "EXPIRY",
+        "CUSTOMER NAME", "COVER TYPE", "VEHICLE REG", "MAKE", "MODEL"
+    };
+    
+    public Main_Screen() {
+        // Initialize services
+        this.logging = LoggingEngine.getInstance();
+        this.dataService = new PolicyDataService();
+        this.validationService = new PolicyValidationService();
+        this.jsonBuilder = new MotorPolicyJsonBuilder();
+        this.importService = new PolicyImportService(jsonBuilder, validationService, dataService);
+        
+        // Set modern look and feel
+        setModernLookAndFeel();
+        
+        initializeUI();
     }
-	
-	
-	private static String getCoverType(final PolMtrVeh mtrVeh) {
-		String cover_type_code;
-		switch (mtrVeh.getCoverType()) {
-		case "C":
-			cover_type_code = "MTCOMP";
-
-			break;
-		case "F":
-			cover_type_code = "MTPFT";
-
-			break;
-		default:
-			cover_type_code = "MTP";
-
-		}
-		return cover_type_code;
-	}
-	
-	private static String getGender(final Xmm600 xmm600) {
-		String gender;
-		switch (xmm600.getGender()) {
-		case "M":
-			gender = "MALE";
-
-			break;
-		case "F":
-			gender = "FEMALE";
-
-			break;
-		default:
-			gender = null;
-
-		}
-		return gender;
-	}
-	
-	private static String getTitle(final Xmm600 xmm600) {
-		String title;
-		switch (xmm600.getTitleName()) {
-		case "":
-			title = "NA";
-
-			break;
-	
-		default:
-			title = xmm600.getTitleName();
-
-		}
-		return title;
-	}
-
-
-
-	@SuppressWarnings({ "unchecked", "resource" })
-	public void validateJsonRecords() throws AuthenticationException, ClientProtocolException, IOException {
-		JsonObject jsonObject = new JsonObject();
-		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-		FileWriter file = new FileWriter(myDocuments + "\\validation.json");
-		BufferedWriter bw = null;
-		PrintWriter pw = null;
-
-		final List<PolMaster> polMasters = selectionCriteria();
-
-		model.setRowCount(0);
-
-		if (polMasters != null) {
-
-			for (final PolMaster polMaster : polMasters) {
-				skipPolicy = dbCommandExecutor.executeCommand(() -> {
-					return polMasterRepository.isSkipPolicy(polMaster.getPolNo(), polMaster.getRenCnt());
-				});
-
-				if (!skipPolicy) {
-					List<PolMtrVeh> polMtrVehs;
-
-					if (vehRegRefField.getText().length() > 0) {
-
-						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-							return polMtrVehRepository.findPolMtrVehicleByVehRegNo(polMaster.getPolNo(),
-									polMaster.getRenCnt(), polMaster.getEndtCnt(), vehRegRefField.getText());
-						});
-					} else {
-						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-							return polMtrVehRepository.findPolMtrVehicleList(polMaster.getPolNo(),
-									polMaster.getRenCnt(), polMaster.getEndtCnt());
-						});
-					}
-
-					for (final PolMtrVeh mtrVeh : polMtrVehs) {
-
-						final List<PolRisk> polRisks = dbCommandExecutor.executeCommand(() -> {
-							return polRiskRepository.findPolRiskRecord(polMaster.getPolNo(), polMaster.getRenCnt(),
-									polMaster.getEndtCnt(), mtrVeh.getRiskGrp(), mtrVeh.getRiskNo());
-						});
-
-						for (final PolRisk polRisk : polRisks) {
-
-							pctIncBaseAP = dbCommandExecutor.executeCommand(() -> {
-								return xmm106Repository.findPctIncBaseAPForClass(polRisk.getBusinessClass(),
-										mtrVeh.getCoverType());
-							});
-
-							final List<PolItemBen> itemBens = dbCommandExecutor.executeCommand(() -> {
-								return polItemBenRepository.findPolItemBenRecord(polMaster.getPolNo(),
-										polMaster.getRenCnt(), polMaster.getEndtCnt(), mtrVeh.getRiskGrp(),
-										mtrVeh.getRiskNo(), mtrVeh.getItemNo());
-							});
-
-							final List<Xmm600> xmm600IntermediaryList = dbCommandExecutor.executeCommand(() -> {
-								return xmm600Repository.findInterMediary(polMaster.getAgent());
-
-							});
-
-							final List<Xmm600> xmm600ClientList = dbCommandExecutor.executeCommand(() -> {
-								return xmm600Repository.findClients(polMaster.getInsured());
-
-							});
-
-							for (final Xmm600 xmm600 : xmm600ClientList) {
-
-								jsonObject = (JsonObject) validateRecord(polMaster, polRisk, mtrVeh, xmm600);
-
-								bw = new BufferedWriter(file);
-								pw = new PrintWriter(bw);
-								pw.println(jsonObject.toString());
-								pw.flush();
-							}
-
-						}
-					}
-				}
-			}
-
-			Desktop.getDesktop().open(new File(myDocuments + "\\validation.json"));
-
-			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-
-			em.close();
-			emf.close();
-
-			pw.close();
-			bw.close();
-			file.close();
-			JOptionPane.showMessageDialog(null, "Validation Process Completed !", "Data Validation",
-					JOptionPane.INFORMATION_MESSAGE);
-		} else {
-			JOptionPane.showMessageDialog(null, "No records To be Validated !", "Data Validation",
-					JOptionPane.INFORMATION_MESSAGE);
-		}
-
-	}
-
-	private JsonElement validateRecord(final PolMaster polMaster, final PolRisk polRisk, final PolMtrVeh mtrVeh,
-			final Xmm600 xmm600) {
-		JsonObject jsonObject = new JsonObject();
-		String result = "";
-		boolean isValid = true;
-
-		if (polRisk.getComDate() == null) {
-			jsonObject.addProperty("riskCommenceDateIdentification", polMaster.getPolNo());
-			jsonObject.addProperty("riskCommenceDateDescription", "Risk Commence Date is Null");
-			isValid = false;
-		}
-
-		if (polRisk.getExpiryDate() == null) {
-			jsonObject.addProperty("riskExpiryDateIdentification", polMaster.getPolNo());
-			jsonObject.addProperty("riskExpiryDateDescription", "Risk Expiry Date is Null");
-			isValid = false;
-		}
-
-		if (xmm600.getName1().isEmpty()) {
-			isValid = false;
-		}
-
-		if (xmm600.getBirthday() == null) {
-
-			jsonObject.addProperty("clientBirthdayIdentification",
-					xmm600.getClientNo() + " " + polMaster.getPolNo() + "  " + xmm600.getName1());
-			jsonObject.addProperty("clientBirthDayDescription", "Birthday is Null");
-			isValid = false;
-		}
-
-		if (xmm600.getBirthday() != null) {
-			if (!GenericValidator.isDate(xmm600.getBirthday().toString().substring(0, 10), "yyyy-MM-dd", true)) {
-
-				jsonObject.addProperty("invalidBirthdayIdentification",
-						xmm600.getClientNo() + " " + polMaster.getPolNo() + "  " + xmm600.getName1().toString() + " "
-								+ xmm600.getBirthday().toString().substring(0, 10));
-				jsonObject.addProperty("Invalid BirthdayDescription", "Invalid Birthday");
-				isValid = false;
-			}
-		}
-
-		if (xmm600.getTelno7() == null || xmm600.getTelno7().isEmpty() || xmm600.getTelno7().length() < 10) {
-
-			jsonObject.addProperty("invalidClientTelephoneIdentification", xmm600.getClientNo() + " "
-					+ polMaster.getPolNo() + "  " + xmm600.getName1().toString() + " " + xmm600.getTelno7().toString());
-			jsonObject.addProperty("invalidClientTelephoneDescription", "Invalid Client Telephone");
-			isValid = false;
-		}
-
-		if (mtrVeh.getColour() == null || mtrVeh.getColour().isEmpty()) {
-			jsonObject.addProperty("motorColorIdentification",
-					polMaster.getPolNo() + " " + xmm600.getName1().toString() + " " + mtrVeh.getVehRegNo());
-			jsonObject.addProperty("motorColoreDescription", "No Motor Colour");
-			isValid = false;
-		}
-
-		if (mtrVeh.getNoSeats() == null || mtrVeh.getNoSeats() == 0) {
-			jsonObject.addProperty("numberOfSeatsIdentification",
-					polMaster.getPolNo() + " " + xmm600.getName1().toString() + " " + mtrVeh.getVehRegNo());
-			jsonObject.addProperty("numberOfSeatDescription", "Number of Seats should be greater than Zero!!");
-			isValid = false;
-		}
-		return jsonObject;
-	}
-
-	private void writeJsonRecords(final String polNo, final Integer renCnt, final Integer endtCnt) {
-
-		JsonObject jsonObject = new JsonObject();
-
-		jsonObject.addProperty("polNo", polNo);
-		jsonObject.addProperty("renCnt", renCnt);
-		jsonObject.addProperty("endtCnt", endtCnt);
-		jsonObject.addProperty("trandate", endtCnt);
-
-		String result = new Gson().toJson(jsonObject);
-
-		// System.out.println(result);
-
-	}
-
-	private boolean recordIsValidated(final PolMaster polMaster, final PolRisk polRisk, final PolMtrVeh mtrVeh,
-			final List<PolItemBen> itemBens, final List<Xmm600> xmm600ClientList,
-			final List<Xmm600> xmm600IntermediaryList) {
-
-		// return true;
-
-		JsonObject jsonObject = new JsonObject();
-		String result = "";
-		boolean isValid = true;
-
-		if (itemBens.isEmpty()) {
-			jsonObject.addProperty("NoItemBenefitsIdentification", polMaster.getPolNo() + " " + mtrVeh.getVehRegNo());
-			jsonObject.addProperty("NoItemBenefitsDescription", "Record Has No Item Benefits");
-			isValid = false;
-		}
-
-		for (final Xmm600 xmm6002 : xmm600ClientList) {
-
-			if (polRisk.getComDate() == null) {
-				jsonObject.addProperty("riskCommenceDateIdentification",
-						polMaster.getPolNo() + " " + mtrVeh.getVehRegNo());
-				jsonObject.addProperty("riskCommenceDateDescription", "Risk Commence Date is Null");
-				isValid = false;
-			}
-
-			if (polRisk.getExpiryDate() == null) {
-				jsonObject.addProperty("riskExpiryDateIdentification",
-						polMaster.getPolNo() + " " + mtrVeh.getVehRegNo());
-				jsonObject.addProperty("riskExpiryDateDescription", "Risk Expiry Date is Null");
-				isValid = false;
-			}
-
-			if (xmm6002.getName1().isEmpty()) {
-				return false;
-			}
-
-			if (xmm6002.getBirthday() == null) {
-
-				jsonObject.addProperty("clientBirthdayIdentification",
-						xmm6002.getClientNo() + " " + polMaster.getPolNo() + "  " + xmm6002.getName1());
-				jsonObject.addProperty("clientBirthDayDescription", "Birthday is Null");
-				isValid = false;
-			}
-
-			if (xmm6002.getBirthday() != null) {
-				if (!GenericValidator.isDate(xmm6002.getBirthday().toString().substring(0, 10), "yyyy-MM-dd", true)) {
-
-					jsonObject.addProperty("invalidBirthdayIdentification",
-							xmm6002.getClientNo() + " " + polMaster.getPolNo() + "  " + xmm6002.getName1().toString()
-									+ " " + xmm6002.getBirthday().toString().substring(0, 10));
-					jsonObject.addProperty("Invalid BirthdayDescription", "Invalid Birthday");
-					isValid = false;
-				}
-			}
-
-			if (xmm6002.getTelno7() == null || xmm6002.getTelno7().isEmpty() || xmm6002.getTelno7().length() < 10) {
-
-				jsonObject.addProperty("invalidClientTelephoneIdentification",
-						xmm6002.getClientNo() + " " + polMaster.getPolNo() + "  " + xmm6002.getName1().toString() + " "
-								+ xmm6002.getTelno7().toString());
-				jsonObject.addProperty("invalidClientTelephoneDescription", "Invalid Client Telephone");
-				isValid = false;
-			}
-
-			if (mtrVeh.getColour() == null || mtrVeh.getColour().isEmpty()) {
-				jsonObject.addProperty("motorColorIdentification",
-						polMaster.getPolNo() + " " + xmm6002.getName1().toString() + " " + mtrVeh.getVehRegNo());
-				jsonObject.addProperty("motorColoreDescription", "No Motor Colour");
-				isValid = false;
-			}
-
-			if (mtrVeh.getNoSeats() == null || mtrVeh.getNoSeats() == 0) {
-				jsonObject.addProperty("numberOfSeatsIdentification",
-						polMaster.getPolNo() + " " + xmm6002.getName1().toString() + " " + mtrVeh.getVehRegNo());
-				jsonObject.addProperty("numberOfSeatDescription", "Number of Seats should be greater than Zero!!");
-				isValid = false;
-			}
-		}
-
-		result = new Gson().toJson(jsonObject);
-		System.out.println(result);
-
-		if (isValid) {
-
-			return true;
-		} else {
-			return false;
-		}
-
-	}
-
-	
-
-	protected void importJsonRecords(final String json, final String polNo)
-			throws ClientProtocolException, IOException, AuthenticationException {
-
-		final CloseableHttpResponse response = HttpAuthentication.getPostPolicyToPortalResponse(json);
-
-		final HttpEntity body = response.getEntity();
-
-		final StatusLine statusLine = response.getStatusLine();
-		System.out.println(response.getStatusLine());
-		final String content = EntityUtils.toString(body);
-
-		if (statusLine.getStatusCode() == HttpCode.OK.getCode()) {
-
-			
-			System.out.println(polNo.toString() + " " + HttpCode.OK.getCode());
-
-		} else {
-			logging.setMessage(polNo.toString() + " " + content.toString());
-			System.out.println(polNo.toString() + " " + content.toString());
-		}
-
-	}
-
-	protected void getMIDSchedules() throws AuthenticationException {
-
-		final String branches = HttpAuthentication.getMIDBranches();
-
-	}
-
-	protected JsonArray getMIDBranches() throws AuthenticationException {
-
-		final String branches = HttpAuthentication.getMIDBranches();
-
-		return JsonReader.readAsJsonArray(branches);
-
-	}
-
-	private void updatePolMtrVeh(final String content) {
-
-		final String polNo;
-
-		final Integer renCnt;
-
-		final Integer endtCnt;
-
-		final String vehRegNo;
-
-		final String referenceNumber;
-
-		String stickerNumber;
-
-		final String refExp = "$.motor_policy.reference";
-		final String stickerExp = "$.motor_policy.sticker_number";
-		final String vehRegNumberExp = "$.motor_policy.vehicle_registration";
-		referenceNumber = JsonPath.parse(content).read(refExp);
-		stickerNumber = JsonPath.parse(content).read(stickerExp);
-		if (!(stickerNumber == null)) {
-			final Matcher matcher = Pattern.compile("\\d+").matcher(stickerNumber);
-			matcher.find();
-			final Long i = Long.valueOf(matcher.group());
-			stickerNumber = i.toString();
-			polNo = referenceNumber.substring(0, 16);
-
-			renCnt = Integer.parseInt(referenceNumber.substring(16, 17));
-
-			endtCnt = Integer.parseInt(referenceNumber.substring(17, 18));
-
-			vehRegNo = JsonPath.parse(content).read(vehRegNumberExp);
-			;
-			getReadyForDataUpdate();
-			final PolMtrVeh polMtrVeh = dbCommandExecutor.executeCommand(() -> {
-				return polMtrVehRepository.findPolMtrVehicleRecordByCompositeKey(polNo, renCnt, endtCnt, vehRegNo);
-			});
-
-			if (polMtrVeh != null) {
-				polMtrVeh.setOwnName(stickerNumber);
-
-				dbCommandExecutor.executeCommand(() -> {
-
-					polMtrVehRepository.update(polMtrVeh);
-					return null;
-				});
-			}
-		}
-	}
-
-	public synchronized void prepareDataFlow() {
-
-		emf = Persistence.createEntityManagerFactory("midPU");
-		em = emf.createEntityManager();
-		dbCommandExecutor = new DbCommandExecutor(em);
-		xmm600Repository = new Xmm600Repository();
-		xmm600Repository.em = em;
-		xmm600Repository.setDbCommandExecutor(dbCommandExecutor);
-
-		polMasterRepository = new PolMasterRepository();
-		polMasterRepository.em = em;
-		polMasterRepository.setDbCommandExecutor(dbCommandExecutor);
-
-		polRiskRepository = new PolRiskRepository();
-		polRiskRepository.em = em;
-		polRiskRepository.setDbCommandExecutor(dbCommandExecutor);
-
-		polItemRepository = new PolItemRepository();
-		polItemRepository.em = em;
-		polItemRepository.setDbCommandExecutor(dbCommandExecutor);
-
-		polMtrVehRepository = new PolMtrVehRepository();
-		polMtrVehRepository.em = em;
-		polMtrVehRepository.setDbCommandExecutor(dbCommandExecutor);
-
-		polItemBenRepository = new PolItemBenRepository();
-		polItemBenRepository.em = em;
-		polItemBenRepository.setDbCommandExecutor(dbCommandExecutor);
-
-		xmm106Repository = new Xmm106Repository();
-		xmm106Repository.em = em;
-		xmm106Repository.setDbCommandExecutor(dbCommandExecutor);
-
-		xmm023Repository = new Xmm023Repository();
-		xmm023Repository.em = em;
-		xmm023Repository.setDbCommandExecutor(dbCommandExecutor);
-	}
-
-	public synchronized void getReadyForDataUpdate() {
-
-		emf = Persistence.createEntityManagerFactory("midUP");
-		em = emf.createEntityManager();
-		dbCommandExecutor = new DbCommandExecutor(em);
-		polMtrVehRepository = new PolMtrVehRepository();
-		polMtrVehRepository.em = em;
-		polMtrVehRepository.setDbCommandExecutor(dbCommandExecutor);
-
-	}
-
-	public void findRecord() {
-
-		final List<PolMaster> polMasters = selectionCriteria();
-		model.setRowCount(0);
-
-		if (polMasters != null) {
-
-			for (final PolMaster polMaster : polMasters) {
-
-				skipPolicy = dbCommandExecutor.executeCommand(() -> {
-					return polMasterRepository.isSkipPolicy(polMaster.getPolNo(), polMaster.getRenCnt());
-				});
-
-				if (!skipPolicy) {
-					List<PolMtrVeh> polMtrVehs;
-
-					if (vehRegRefField.getText().length() > 0) {
-
-						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-							return polMtrVehRepository.findPolMtrVehicleByVehRegNo(polMaster.getPolNo(),
-									polMaster.getRenCnt(), polMaster.getEndtCnt(), vehRegRefField.getText());
-						});
-					} else {
-						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-							return polMtrVehRepository.findPolMtrVehicleList(polMaster.getPolNo(),
-									polMaster.getRenCnt(), polMaster.getEndtCnt());
-						});
-					}
-
-					for (final PolMtrVeh mtrVeh : polMtrVehs) {
-
-						final List<PolRisk> polRisks = dbCommandExecutor.executeCommand(() -> {
-							return polRiskRepository.findPolRiskRecord(polMaster.getPolNo(), polMaster.getRenCnt(),
-									polMaster.getEndtCnt(), mtrVeh.getRiskGrp(), mtrVeh.getRiskNo());
-						});
-
-						for (final PolRisk polRisk : polRisks) {
-
-							final Object[] colRowVect = new Object[] { polMaster.getTranDate().toString(),
-									polMaster.getPolNo(), mtrVeh.getOwnName(), polRisk.getComDate(),
-									polRisk.getExpiryDate(),
-									polMaster.getInsdName1() + polMaster.getInsdName2() + polMaster.getInsdName3(),
-									mtrVeh.getCoverType(), mtrVeh.getVehRegNo(), mtrVeh.getVehMake(),
-									mtrVeh.getModelDesc() };
-							model.addRow(colRowVect);
-
-						}
-
-					}
-
-					// for (final PolMtrVeh mtrVeh : polMtrVehs) {
-
-					// final Object[] colRowVect = new Object[] {
-					// polMaster.getTranDate().toString(),
-					// polMaster.getPolNo(), mtrVeh.getOwnName(), polMaster.getComDate(),
-					// polMaster.getExpiryDate(),
-					// polMaster.getInsdName1() + polMaster.getInsdName2() +
-					// polMaster.getInsdName3(),
-					// mtrVeh.getCoverType(), mtrVeh.getVehRegNo(), mtrVeh.getVehMake(),
-					// mtrVeh.getModelDesc() };
-					// model.addRow(colRowVect);
-					// }
-				}
-			}
-			em.close();
-			emf.close();
-			importBtn.setEnabled(true);
-
-			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-
-		}
-
-	}
-
-	static class SelectAll extends TextAction {
-		public SelectAll() {
-			super("Select All");
-			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control S"));
-		}
-
-		@Override
-		public void actionPerformed(final ActionEvent e) {
-			JTextComponent component = getFocusedComponent();
-			component.selectAll();
-			component.requestFocusInWindow();
-		}
-	}
-
+    
+    private void setModernLookAndFeel() {
+        try {
+            // Use system look and feel for native appearance
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            
+            // Custom UI defaults
+            UIManager.put("Button.background", PRIMARY_COLOR);
+            UIManager.put("Button.foreground", Color.WHITE);
+            UIManager.put("Button.font", BUTTON_FONT);
+            UIManager.put("Button.border", BorderFactory.createEmptyBorder(8, 16, 8, 16));
+            
+            UIManager.put("TextField.font", TEXT_FIELD_FONT);
+            UIManager.put("TextField.background", Color.WHITE);
+            UIManager.put("TextField.border", BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR, 1),
+                BorderFactory.createEmptyBorder(6, 8, 6, 8)
+            ));
+            
+            UIManager.put("Label.font", LABEL_FONT);
+            UIManager.put("Table.font", TABLE_FONT);
+            UIManager.put("TableHeader.font", TABLE_HEADER_FONT);
+            UIManager.put("TableHeader.background", TABLE_HEADER_COLOR);
+            UIManager.put("TableHeader.foreground", Color.WHITE);
+            UIManager.put("Table.selectionBackground", TABLE_SELECTION_COLOR);
+            UIManager.put("Table.selectionForeground", Color.BLACK);
+            UIManager.put("Table.gridColor", TABLE_GRID_COLOR);
+            
+            UIManager.put("ProgressBar.foreground", ACCENT_COLOR);
+            
+        } catch (Exception e) {
+            System.err.println("Could not set modern look and feel: " + e.getMessage());
+        }
+    }
+    
+    private void initializeUI() {
+        setLayout(new BorderLayout(0, 0));
+        setBackground(BACKGROUND_COLOR);
+        
+        // Create header panel
+        JPanel headerPanel = createHeaderPanel();
+        add(headerPanel, BorderLayout.NORTH);
+        
+        // Create main content panel
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setBackground(BACKGROUND_COLOR);
+        contentPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        
+        // Create control panel
+        JPanel controlPanel = createControlPanel();
+        contentPanel.add(controlPanel, BorderLayout.NORTH);
+        
+        // Create table panel
+        JPanel tablePanel = createTablePanel();
+        contentPanel.add(tablePanel, BorderLayout.CENTER);
+        
+        // Create status panel
+        JPanel statusPanel = createStatusPanel();
+        contentPanel.add(statusPanel, BorderLayout.SOUTH);
+        
+        add(contentPanel, BorderLayout.CENTER);
+    }
+    
+    private JPanel createHeaderPanel() {
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(PRIMARY_COLOR);
+        headerPanel.setPreferredSize(new Dimension(getWidth(), 70));
+        headerPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
+        
+        // Title
+        JLabel titleLabel = new JLabel("Policy Management System");
+        titleLabel.setFont(TITLE_FONT);
+        titleLabel.setForeground(Color.WHITE);
+        
+        // Subtitle
+        JLabel subtitleLabel = new JLabel("Import • Validate • Manage");
+        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        subtitleLabel.setForeground(new Color(240, 240, 240));
+        
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setOpaque(false);
+        titlePanel.add(titleLabel);
+        titlePanel.add(Box.createVerticalStrut(5));
+        titlePanel.add(subtitleLabel);
+        
+        headerPanel.add(titlePanel, BorderLayout.WEST);
+        
+        // Add a subtle separator on the right
+        JSeparator separator = new JSeparator(JSeparator.VERTICAL);
+        separator.setForeground(new Color(255, 255, 255, 100));
+        separator.setPreferredSize(new Dimension(1, 40));
+        
+        JPanel separatorPanel = new JPanel();
+        separatorPanel.setOpaque(false);
+        separatorPanel.add(separator);
+        
+        headerPanel.add(separatorPanel, BorderLayout.EAST);
+        
+        return headerPanel;
+    }
+    
+    private JPanel createControlPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(PANEL_BACKGROUND);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(BORDER_COLOR, 1),
+            new EmptyBorder(20, 20, 20, 20)
+        ));
+        
+        // Section title with icon
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        titlePanel.setBackground(PANEL_BACKGROUND);
+        
+        JLabel sectionTitle = new JLabel("Search Criteria");
+        sectionTitle.setFont(HEADER_FONT);
+        sectionTitle.setForeground(TABLE_HEADER_COLOR);
+        sectionTitle.setIcon(createIcon("🔍", 16)); // Search icon
+        sectionTitle.setIconTextGap(8);
+        
+        titlePanel.add(sectionTitle);
+        panel.add(titlePanel);
+        panel.add(Box.createVerticalStrut(15));
+        
+        // Create form panel
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBackground(PANEL_BACKGROUND);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(8, 8, 8, 8);
+        
+        // Date controls row
+        gbc.gridx = 0; gbc.gridy = 0;
+        formPanel.add(createFormLabel("Start Date:"), gbc);
+        
+        gbc.gridx = 1;
+        startDatePicker = createStyledDateChooser();
+        formPanel.add(startDatePicker, gbc);
+        
+        gbc.gridx = 2;
+        formPanel.add(createFormLabel("End Date:"), gbc);
+        
+        gbc.gridx = 3;
+        endDatePicker = createStyledDateChooser();
+        formPanel.add(endDatePicker, gbc);
+        
+        // Search fields row
+        gbc.gridx = 0; gbc.gridy = 1;
+        formPanel.add(createFormLabel("Policy Number:"), gbc);
+        
+        gbc.gridx = 1;
+        polNoField = createStyledTextField();
+        formPanel.add(polNoField, gbc);
+        
+        gbc.gridx = 2;
+        formPanel.add(createFormLabel("Vehicle Reg:"), gbc);
+        
+        gbc.gridx = 3;
+        vehRegRefField = createStyledTextField();
+        formPanel.add(vehRegRefField, gbc);
+        
+        panel.add(formPanel);
+        panel.add(Box.createVerticalStrut(20));
+        
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        buttonPanel.setBackground(PANEL_BACKGROUND);
+        
+        findBtn = createStyledButton("Search", PRIMARY_COLOR, "🔍");
+        findBtn.addActionListener(this);
+        buttonPanel.add(findBtn);
+        
+        importBtn = createStyledButton("Import", ACCENT_COLOR, "📤");
+        importBtn.setEnabled(false);
+        importBtn.addActionListener(e -> startImport());
+        buttonPanel.add(importBtn);
+        
+     // Add a button to your control panel to open scheduler control
+        JButton schedulerBtn = new JButton("Scheduler");
+        schedulerBtn.addActionListener(e -> showSchedulerControl());
+        buttonPanel.add(schedulerBtn);
+        
+        validateBtn = createStyledButton("Validate", SECONDARY_COLOR, "✓");
+        validateBtn.addActionListener(e -> startValidation());
+        buttonPanel.add(validateBtn);
+        
+        panel.add(buttonPanel);
+        
+        return panel;
+    }
+    
+    private JLabel createFormLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(LABEL_FONT);
+        label.setForeground(new Color(60, 60, 60));
+        return label;
+    }
+    
+    private Icon createIcon(String emoji, int size) {
+        return new Icon() {
+            @Override
+            public void paintIcon(Component c, Graphics g, int x, int y) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, size));
+                FontMetrics fm = g2.getFontMetrics();
+                g2.drawString(emoji, x, y + fm.getAscent());
+                g2.dispose();
+            }
+            
+            @Override
+            public int getIconWidth() {
+                return size;
+            }
+            
+            @Override
+            public int getIconHeight() {
+                return size;
+            }
+        };
+    }
+    
+    private JDateChooser createStyledDateChooser() {
+        JDateChooser dateChooser = new JDateChooser();
+        dateChooser.setDateFormatString("yyyy-MM-dd");
+        dateChooser.setPreferredSize(new Dimension(150, 35));
+        
+        // Try to style the calendar button
+        try {
+            // Get the calendar button using reflection since it's protected
+            java.lang.reflect.Field field = dateChooser.getClass().getDeclaredField("calendarButton");
+            field.setAccessible(true);
+            JButton calendarButton = (JButton) field.get(dateChooser);
+            
+            if (calendarButton != null) {
+                calendarButton.setBackground(PRIMARY_COLOR);
+                calendarButton.setForeground(Color.WHITE);
+                calendarButton.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+                calendarButton.setFocusPainted(false);
+                calendarButton.setText("📅"); // Calendar emoji
+                calendarButton.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 12));
+            }
+        } catch (Exception e) {
+            // If reflection fails, just use default styling
+            System.err.println("Could not style calendar button: " + e.getMessage());
+        }
+        
+        return dateChooser;
+    }
+    
+    private JTextField createStyledTextField() {
+        JTextField textField = new JTextField(15);
+        textField.setFont(TEXT_FIELD_FONT);
+        textField.setPreferredSize(new Dimension(150, 35));
+        
+        // Modern border with rounded corners effect
+        textField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(BORDER_COLOR, 1),
+            new EmptyBorder(8, 10, 8, 10)
+        ));
+        
+        // Add focus listener for better UX
+        textField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                textField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(PRIMARY_COLOR, 2),
+                    new EmptyBorder(7, 9, 7, 9)
+                ));
+            }
+            
+            @Override
+            public void focusLost(FocusEvent e) {
+                textField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(BORDER_COLOR, 1),
+                    new EmptyBorder(8, 10, 8, 10)
+                ));
+            }
+        });
+        
+        // Add context menu
+        JPopupMenu contextMenu = createContextMenu();
+        textField.setComponentPopupMenu(contextMenu);
+        
+        return textField;
+    }
+    
+   
+    	private JButton createStyledButton(String text, Color color, String iconEmoji) {
+    	    JButton button = new JButton(text) {
+    	        // Keep the background painting but ensure text is visible
+    	        @Override
+    	        protected void paintComponent(Graphics g) {
+    	            Graphics2D g2 = (Graphics2D) g.create();
+    	            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    	            
+    	            // Paint background
+    	            Color bgColor = getBackground();
+    	            if (!isEnabled()) {
+    	                bgColor = bgColor.darker();
+    	            } else if (getModel().isPressed()) {
+    	                bgColor = bgColor.darker();
+    	            } else if (getModel().isRollover()) {
+    	                bgColor = bgColor.brighter();
+    	            }
+    	            
+    	            g2.setColor(bgColor);
+    	            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 6, 6);
+    	            g2.dispose();
+    	            
+    	            // Let super paint the text and icon
+    	            super.paintComponent(g);
+    	        }
+    	        
+    	        @Override
+    	        public void setBackground(Color bg) {
+    	            super.setBackground(bg);
+    	        }
+    	    };
+    	    
+    	    button.setFont(BUTTON_FONT);
+    	    button.setForeground(Color.WHITE);
+    	    button.setBackground(color);
+    	    button.setBorder(BorderFactory.createCompoundBorder(
+    	        BorderFactory.createLineBorder(color.darker(), 1),
+    	        new EmptyBorder(10, 20, 10, 20)
+    	    ));
+    	    button.setFocusPainted(false);
+    	    button.setContentAreaFilled(false); // Important: Let our custom paintComponent handle filling
+    	    button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    	    
+    	    // Add icon if provided
+    	    if (iconEmoji != null && !iconEmoji.isEmpty()) {
+    	        button.setIcon(createIcon(iconEmoji, 14));
+    	        button.setHorizontalTextPosition(SwingConstants.RIGHT);
+    	        button.setIconTextGap(8);
+    	    }
+    	    
+    	    // Hover effect
+    	    button.addMouseListener(new MouseAdapter() {
+    	        @Override
+    	        public void mouseEntered(MouseEvent e) {
+    	            button.setBackground(color.brighter());
+    	            button.repaint();
+    	        }
+    	        
+    	        @Override
+    	        public void mouseExited(MouseEvent e) {
+    	            button.setBackground(color);
+    	            button.repaint();
+    	        }
+    	        
+    	        @Override
+    	        public void mousePressed(MouseEvent e) {
+    	            button.setBackground(color.darker());
+    	            button.repaint();
+    	        }
+    	        
+    	        @Override
+    	        public void mouseReleased(MouseEvent e) {
+    	            button.setBackground(color.brighter());
+    	            button.repaint();
+    	        }
+    	    });
+    	    
+    	    return button;
+    	}
+    
+    
+    private JPanel createTablePanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(PANEL_BACKGROUND);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(BORDER_COLOR, 1),
+            new EmptyBorder(0, 0, 0, 0)
+        ));
+        
+        // Table header
+        JPanel tableHeader = new JPanel(new BorderLayout());
+        tableHeader.setBackground(PANEL_BACKGROUND);
+        tableHeader.setBorder(new EmptyBorder(15, 15, 10, 15));
+        
+        JLabel tableTitle = new JLabel("Policy Records");
+        tableTitle.setFont(HEADER_FONT);
+        tableTitle.setForeground(TABLE_HEADER_COLOR);
+        tableTitle.setIcon(createIcon("📋", 16)); // Clipboard icon
+        tableTitle.setIconTextGap(8);
+        
+        JLabel recordCount = new JLabel("0 records");
+        recordCount.setFont(LABEL_FONT);
+        recordCount.setForeground(new Color(100, 100, 100));
+        
+        tableHeader.add(tableTitle, BorderLayout.WEST);
+        tableHeader.add(recordCount, BorderLayout.EAST);
+        panel.add(tableHeader, BorderLayout.NORTH);
+        
+        // Create table model
+        model = new DefaultTableModel(COLUMN_NAMES, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        // Create table with custom renderer
+        table = new JTable(model) {
+            @Override
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                
+                // Alternate row colors
+                if (!isRowSelected(row)) {
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
+                }
+                
+                // Highlight empty cells
+                Object value = getValueAt(row, column);
+                if (value == null || value.toString().trim().isEmpty()) {
+                    c.setBackground(new Color(255, 243, 205)); // Light yellow
+                }
+                
+                // Set font
+                c.setFont(TABLE_FONT);
+                
+                return c;
+            }
+        };
+        
+        // Configure table appearance
+        table.setRowHeight(32);
+        table.setShowGrid(true);
+        table.setGridColor(TABLE_GRID_COLOR);
+        table.setSelectionBackground(TABLE_SELECTION_COLOR);
+        table.setSelectionForeground(Color.BLACK);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setFillsViewportHeight(true);
+        
+        // Configure table header
+        JTableHeader header = table.getTableHeader();
+        header.setFont(TABLE_HEADER_FONT);
+        header.setBackground(TABLE_HEADER_COLOR);
+        header.setForeground(Color.WHITE);
+        header.setReorderingAllowed(false);
+        
+        // Center align header text
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setHorizontalAlignment(SwingConstants.CENTER);
+                setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(0, 0, 1, 0, Color.WHITE),
+                    new EmptyBorder(10, 5, 10, 5)
+                ));
+                return this;
+            }
+        };
+        
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setHeaderRenderer(headerRenderer);
+        }
+        
+        // Center align all columns
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+        
+        // Create scroll pane
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createLineBorder(BORDER_COLOR, 1));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        
+        // Add scroll pane to panel
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        return panel;
+    }
+    
+    private JPanel createStatusPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(PANEL_BACKGROUND);
+        panel.setBorder(new EmptyBorder(10, 0, 0, 0));
+        
+        // Separator
+        JSeparator separator = new JSeparator();
+        separator.setForeground(BORDER_COLOR);
+        panel.add(separator, BorderLayout.NORTH);
+        
+        // Status components
+        JPanel statusContainer = new JPanel(new BorderLayout());
+        statusContainer.setBackground(PANEL_BACKGROUND);
+        statusContainer.setBorder(new EmptyBorder(10, 0, 10, 0));
+        
+        // Progress bar
+        progressBar = new JProgressBar();
+        progressBar.setStringPainted(true);
+        progressBar.setFont(LABEL_FONT);
+        progressBar.setForeground(ACCENT_COLOR);
+        progressBar.setBackground(new Color(240, 240, 240));
+        progressBar.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(BORDER_COLOR, 1),
+            new EmptyBorder(2, 2, 2, 2)
+        ));
+        progressBar.setVisible(false);
+        
+        // Status label
+        statusLabel = new JLabel("Ready");
+        statusLabel.setFont(LABEL_FONT);
+        statusLabel.setForeground(new Color(100, 100, 100));
+        statusLabel.setBorder(new EmptyBorder(0, 10, 0, 10));
+        
+        statusContainer.add(progressBar, BorderLayout.CENTER);
+        statusContainer.add(statusLabel, BorderLayout.EAST);
+        
+        panel.add(statusContainer, BorderLayout.CENTER);
+        
+        return panel;
+    }
+    
+    private JPopupMenu createContextMenu() {
+        JPopupMenu menu = new JPopupMenu();
+        menu.setBorder(BorderFactory.createLineBorder(BORDER_COLOR, 1));
+        
+        // Cut action
+        Action cut = new DefaultEditorKit.CutAction();
+        cut.putValue(Action.NAME, "Cut");
+        cut.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
+        cut.putValue(Action.SMALL_ICON, createIcon("✂", 14));
+        menu.add(cut);
+        
+        // Copy action
+        Action copy = new DefaultEditorKit.CopyAction();
+        copy.putValue(Action.NAME, "Copy");
+        copy.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
+        copy.putValue(Action.SMALL_ICON, createIcon("📋", 14));
+        menu.add(copy);
+        
+        // Paste action
+        Action paste = new DefaultEditorKit.PasteAction();
+        paste.putValue(Action.NAME, "Paste");
+        paste.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
+        paste.putValue(Action.SMALL_ICON, createIcon("📝", 14));
+        menu.add(paste);
+        
+        menu.addSeparator();
+        
+        // Select All action
+        Action selectAll = new SelectAllAction();
+        selectAll.putValue(Action.SMALL_ICON, createIcon("📄", 14));
+        menu.add(selectAll);
+        
+        return menu;
+    }
+    
+    private static class SelectAllAction extends TextAction {
+        public SelectAllAction() {
+            super("Select All");
+            putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control A"));
+        }
+        
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JTextComponent component = getFocusedComponent();
+            if (component != null) {
+                component.selectAll();
+                component.requestFocusInWindow();
+            }
+        }
+    }
+    
+    // ========== Business Logic Methods (Unchanged from previous version) ==========
+    
+    private void startImport() {
+        ImportWorker worker = new ImportWorker();
+        worker.execute();
+    }
+    
+    private void startValidation() {
+        ValidationWorker worker = new ValidationWorker();
+        worker.execute();
+    }
+    
+    private ImportCriteria createImportCriteria() {
+        ImportCriteria criteria = new ImportCriteria();
+        
+        criteria.setPolicyNumber(polNoField.getText().trim());
+        criteria.setVehicleRegNo(vehRegRefField.getText().trim());
+        criteria.setStartDate(startDatePicker.getDate());
+        criteria.setEndDate(endDatePicker.getDate());
+        
+        return criteria;
+    }
+    
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == findBtn) {
+            SearchWorker worker = new SearchWorker();
+            worker.execute();
+        }
+    }
+    
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        if ("progress".equals(evt.getPropertyName())) {
+            int progress = (Integer) evt.getNewValue();
+            progressBar.setValue(progress);
+            progressBar.setString(String.format("Processing... %d%%", progress));
+        } else if ("state".equals(evt.getPropertyName())) {
+            if (SwingWorker.StateValue.DONE == evt.getNewValue()) {
+                progressBar.setVisible(false);
+                setCursor(Cursor.getDefaultCursor());
+            }
+        }
+    }
+    
+ // In your Main_Screen.java, add a method to create a scheduler control window
+    private void showSchedulerControl() {
+        JFrame schedulerFrame = new JFrame("Scheduler Control");
+        schedulerFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        schedulerFrame.setSize(400, 300);
+        schedulerFrame.setLocationRelativeTo(this);
+        
+        SchedulerPanel schedulerPanel = new SchedulerPanel();
+        schedulerFrame.add(schedulerPanel);
+        schedulerFrame.setVisible(true);
+    }
+
+  
+    
+    // ========== Worker Classes ==========
+    
+    private class SearchWorker extends SwingWorker<Void, Void> {
+        @Override
+        protected Void doInBackground() throws Exception {
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            SwingUtilities.invokeLater(() -> {
+                statusLabel.setText("Searching...");
+                model.setRowCount(0);
+                importBtn.setEnabled(false);
+            });
+            
+            ImportCriteria criteria = createImportCriteria();
+            
+            EntityManagerFactory emf = null;
+            EntityManager em = null;
+            
+            try {
+                emf = Persistence.createEntityManagerFactory("midPU");
+                em = emf.createEntityManager();
+                
+                List<PolMaster> polMasters = dataService.findPolMasters(em, criteria);
+                
+                if (polMasters != null && !polMasters.isEmpty()) {
+                    for (PolMaster polMaster : polMasters) {
+                        boolean skipPolicy = dataService.shouldSkipPolicy(em, polMaster.getPolNo(), polMaster.getRenCnt());
+                        
+                        if (!skipPolicy) {
+                            List<PolMtrVeh> vehicles = dataService.findVehicles(em, polMaster, criteria.getVehicleRegNo());
+                            
+                            for (PolMtrVeh vehicle : vehicles) {
+                                List<PolRisk> risks = dataService.findRisks(em, polMaster, vehicle);
+                                
+                                for (PolRisk risk : risks) {
+                                    Object[] row = new Object[] {
+                                        polMaster.getTranDate(),
+                                        polMaster.getPolNo(),
+                                        vehicle.getOwnName(),
+                                        risk.getComDate(),
+                                        risk.getExpiryDate(),
+                                        polMaster.getInsdName1() + " " + polMaster.getInsdName2(),
+                                        vehicle.getCoverType(),
+                                        vehicle.getVehRegNo(),
+                                        vehicle.getVehMake(),
+                                        vehicle.getModelDesc()
+                                    };
+                                    
+                                    SwingUtilities.invokeLater(() -> model.addRow(row));
+                                }
+                            }
+                        }
+                    }
+                    
+                    final int count = polMasters.size();
+                    SwingUtilities.invokeLater(() -> {
+                        importBtn.setEnabled(true);
+                        statusLabel.setText(String.format("Found %d policies", count));
+                    });
+                } else {
+                    SwingUtilities.invokeLater(() -> {
+                        statusLabel.setText("No policies found");
+                        JOptionPane.showMessageDialog(Main_Screen.this,
+                            "No policies found for the given criteria",
+                            "Search Result",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    });
+                }
+            } catch (Exception e) {
+                if (logging != null) {
+                    logging.setMessage("Search failed: " + e.getMessage());
+                    
+                }
+                
+                SwingUtilities.invokeLater(() -> {
+                    statusLabel.setText("Search failed");
+                    JOptionPane.showMessageDialog(Main_Screen.this,
+                        "Search failed: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                });
+            } finally {
+                if (em != null && em.isOpen()) {
+                    em.close();
+                }
+                if (emf != null && emf.isOpen()) {
+                    emf.close();
+                }
+            }
+            
+            return null;
+        }
+        
+        @Override
+        protected void done() {
+            setCursor(Cursor.getDefaultCursor());
+        }
+    }
+    
+    private class ImportWorker extends SwingWorker<ImportResult, Void> {
+        @Override
+        protected ImportResult doInBackground() {
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            SwingUtilities.invokeLater(() -> {
+                progressBar.setVisible(true);
+                progressBar.setIndeterminate(true);
+                statusLabel.setText("Importing policies...");
+                progressBar.setString("Starting import...");
+                
+                importBtn.setEnabled(false);
+                findBtn.setEnabled(false);
+                validateBtn.setEnabled(false);
+            });
+            
+            ImportCriteria criteria = createImportCriteria();
+            return importService.importPolicies(criteria);
+        }
+        
+        @Override
+        protected void done() {
+            try {
+                ImportResult result = get();
+                
+                SwingUtilities.invokeLater(() -> {
+                    if (result.isSuccess()) {
+                        JOptionPane.showMessageDialog(Main_Screen.this,
+                            String.format("Import completed successfully!\n\n" +
+                                        "Total processed: %d\n" +
+                                        "Successful: %d\n" +
+                                        "Failed: %d",
+                                result.getTotalProcessed(), result.getSuccessCount(), result.getFailureCount()),
+                            "Import Complete",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(Main_Screen.this,
+                            "Import failed: " + result.getMessage(),
+                            "Import Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+            } catch (Exception e) {
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(Main_Screen.this,
+                        "Import failed: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                });
+            } finally {
+                SwingUtilities.invokeLater(() -> {
+                    importBtn.setEnabled(true);
+                    findBtn.setEnabled(true);
+                    validateBtn.setEnabled(true);
+                    progressBar.setVisible(false);
+                    statusLabel.setText("Ready");
+                    setCursor(Cursor.getDefaultCursor());
+                });
+            }
+        }
+    }
+    
+    
+    
+    private class ValidationWorker extends SwingWorker<Void, Void> {
+        @Override
+        protected Void doInBackground() throws Exception {
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            SwingUtilities.invokeLater(() -> {
+                progressBar.setVisible(true);
+                progressBar.setIndeterminate(true);
+                statusLabel.setText("Validating policies...");
+                progressBar.setString("Validating...");
+                
+                importBtn.setEnabled(false);
+                findBtn.setEnabled(false);
+                validateBtn.setEnabled(false);
+            });
+            
+            String validationFile = System.getProperty("user.home") + File.separator + "validation.json";
+            FileWriter file = null;
+            PrintWriter writer = null;
+            EntityManagerFactory emf = null;
+            EntityManager em = null;
+            
+            try {
+                file = new FileWriter(validationFile);
+                writer = new PrintWriter(file);
+                
+                ImportCriteria criteria = createImportCriteria();
+                
+                emf = Persistence.createEntityManagerFactory("midPU");
+                em = emf.createEntityManager();
+                
+                List<PolMaster> polMasters = dataService.findPolMasters(em, criteria);
+                
+                if (polMasters != null && !polMasters.isEmpty()) {
+                    Gson gson = new Gson();
+                    
+                    for (PolMaster polMaster : polMasters) {
+                        boolean skipPolicy = dataService.shouldSkipPolicy(em, polMaster.getPolNo(), polMaster.getRenCnt());
+                        
+                        if (!skipPolicy) {
+                            List<PolMtrVeh> vehicles = dataService.findVehicles(em, polMaster, criteria.getVehicleRegNo());
+                            
+                            for (PolMtrVeh vehicle : vehicles) {
+                                List<PolRisk> risks = dataService.findRisks(em, polMaster, vehicle);
+                                
+                                for (PolRisk risk : risks) {
+                                    List<Xmm600> clients = dataService.findClients(em, polMaster);
+                                    
+                                    for (Xmm600 client : clients) {
+                                        JsonObject validationJson = validationService.createValidationJson(
+                                            polMaster, risk, vehicle, client);
+                                        
+                                        if (!validationJson.isJsonNull() || validationJson !=null) {
+                                            writer.println(gson.toJson(validationJson));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    writer.flush();
+                    
+                    SwingUtilities.invokeLater(() -> {
+                        try {
+                            Desktop.getDesktop().open(new File(validationFile));
+                            statusLabel.setText("Validation complete");
+                        } catch (IOException e) {
+                            JOptionPane.showMessageDialog(Main_Screen.this,
+                                "Validation file created but could not open: " + e.getMessage(),
+                                "Warning",
+                                JOptionPane.WARNING_MESSAGE);
+                        }
+                    });
+                } else {
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(Main_Screen.this,
+                            "No policies found for validation",
+                            "Validation Result",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    });
+                }
+            } catch (Exception e) {
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(Main_Screen.this,
+                        "Validation failed: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                });
+            } finally {
+                if (writer != null) {
+                    writer.close();
+                }
+                if (file != null) {
+                    try {
+                        file.close();
+                    } catch (IOException e) {
+                        // Ignore
+                    }
+                }
+                if (em != null && em.isOpen()) {
+                    em.close();
+                }
+                if (emf != null && emf.isOpen()) {
+                    emf.close();
+                }
+            }
+            
+            return null;
+        }
+        
+        @Override
+        protected void done() {
+            SwingUtilities.invokeLater(() -> {
+                importBtn.setEnabled(true);
+                findBtn.setEnabled(true);
+                validateBtn.setEnabled(true);
+                progressBar.setVisible(false);
+                statusLabel.setText("Ready");
+                setCursor(Cursor.getDefaultCursor());
+            });
+        }
+    }
+    
+    
+    
+    
 }
-
-//
-//package com.mid.app.swing.gui;
-//
-//import static com.mid.app.http.utils.ConnectionUtils.checkConnectionToPortal;
-//
-//import java.awt.BorderLayout;
-//import java.awt.Color;
-//import java.awt.Cursor;
-//import java.awt.Desktop;
-//import java.awt.Dimension;
-//import java.awt.Font;
-//import java.awt.Toolkit;
-//import java.awt.event.ActionEvent;
-//import java.awt.event.ActionListener;
-//import java.beans.PropertyChangeEvent;
-//import java.beans.PropertyChangeListener;
-//import java.io.BufferedWriter;
-//import java.io.File;
-//import java.io.FileWriter;
-//import java.io.IOException;
-//import java.io.InputStream;
-//import java.io.PrintWriter;
-//import java.math.BigDecimal;
-//import java.time.LocalDate;
-//import java.time.ZoneId;
-//import java.util.Date;
-//import java.util.Enumeration;
-//import java.util.LinkedHashMap;
-//import java.util.List;
-//import java.util.Map;
-//import java.util.Properties;
-//import java.util.Random;
-//import java.util.logging.Level;
-//import java.util.regex.Matcher;
-//import java.util.regex.Pattern;
-//
-//import javax.persistence.EntityManager;
-//import javax.persistence.EntityManagerFactory;
-//import javax.persistence.Persistence;
-//import javax.swing.Action;
-//import javax.swing.ImageIcon;
-//import javax.swing.JButton;
-//import javax.swing.JFileChooser;
-//import javax.swing.JLabel;
-//import javax.swing.JOptionPane;
-//import javax.swing.JPanel;
-//import javax.swing.JPopupMenu;
-//import javax.swing.JProgressBar;
-//import javax.swing.JScrollPane;
-//import javax.swing.JSeparator;
-//import javax.swing.JTable;
-//import javax.swing.JTextField;
-//import javax.swing.KeyStroke;
-//import javax.swing.SwingConstants;
-//import javax.swing.SwingWorker;
-//import javax.swing.UIManager;
-//import javax.swing.border.BevelBorder;
-//import javax.swing.border.SoftBevelBorder;
-//import javax.swing.table.DefaultTableModel;
-//import javax.swing.text.DefaultEditorKit;
-//import javax.swing.text.JTextComponent;
-//import javax.swing.text.TextAction;
-//
-//import org.apache.commons.validator.GenericValidator;
-//import org.apache.http.HttpEntity;
-//import org.apache.http.StatusLine;
-//import org.apache.http.auth.AuthenticationException;
-//import org.apache.http.client.ClientProtocolException;
-//import org.apache.http.client.methods.CloseableHttpResponse;
-//import org.apache.http.util.EntityUtils;
-//
-//import com.google.gson.Gson;
-//import com.google.gson.JsonArray;
-//import com.google.gson.JsonElement;
-//import com.google.gson.JsonObject;
-//import com.jayway.jsonpath.JsonPath;
-//import com.mid.app.common.json.JsonReader;
-//import com.mid.app.common.json.JsonWriter;
-//import com.mid.app.common.model.HttpCode;
-//import com.mid.app.common.model.Validations;
-//import com.mid.app.common.utils.DbCommandExecutor;
-//import com.mid.app.http.utils.HttpAuthentication;
-//import com.mid.app.polfees.model.PolFees;
-//import com.mid.app.polfees.repository.PolFeesRepository;
-//import com.mid.app.politem.model.PolItem;
-//import com.mid.app.politem.repository.PolItemRepository;
-//import com.mid.app.politemben.model.PolItemBen;
-//import com.mid.app.politemben.repository.PolItemBenRepository;
-//import com.mid.app.polmaster.model.PolMaster;
-//import com.mid.app.polmaster.repository.PolMasterRepository;
-//import com.mid.app.polmtrveh.model.PolMtrVeh;
-//import com.mid.app.polmtrveh.repository.PolMtrVehRepository;
-//import com.mid.app.polrisk.model.PolRisk;
-//import com.mid.app.polrisk.repository.PolRiskRepository;
-//import com.mid.app.swing.utils.ChangeComponentOrientation;
-//import com.mid.app.ui.extras.CustomTableHeaderRenderer;
-//import com.mid.app.ui.extras.PolicyTableRenderer;
-//import com.mid.app.utils.DateUtils;
-//import com.mid.app.utils.LoggingEngine;
-//import com.mid.app.utils.MapCreator;
-//import com.mid.app.xmm023.model.Xmm023;
-//import com.mid.app.xmm023.repository.Xmm023Repository;
-//import com.mid.app.xmm106.repository.Xmm106Repository;
-//import com.mid.app.xmm600.model.Xmm600;
-//import com.mid.app.xmm600.repository.Xmm600Repository;
-//import com.toedter.calendar.JDateChooser;
-//
-//public class Main_Screen extends JPanel implements ActionListener, PropertyChangeListener {
-//
-//	private JTable table;
-//	private Date convertedDate;
-//	private BigDecimal pctIncBaseAP = new BigDecimal(0.0D);
-//	private JPanel buttonPanel;
-//	private JProgressBar progressBar;
-//	private Task task;
-//	private JTextField polNoField;
-//
-//	private JScrollPane scrollPane;
-//
-//	private DefaultTableModel model;
-//	private JTextField vehRegRefField;
-//
-//	private static final long serialVersionUID = 1L;
-//
-//	private JButton importBtn, findBtn, validateBtn, historyBtn;
-//	private JDateChooser startDatePicker, endDatePicker, tranDatePicker;
-//	private ChangeComponentOrientation componentOrientation;
-//	private JLabel startdateLbl, endDateLbl, polNoLbl, agencyRefLbl;
-//	private String result;
-//	private String response;
-//	private final String[] rezColsName = { "TRAN DATE", "POLICY NUMBER", "CERT REF NUMBER", "INCEPTION", "EXPIRY",
-//			"CUSTOMER NAME", "COVER TYPE", "VEHICLE REG", "MAKE", "MODEL" };
-//	private final CustomTableHeaderRenderer THR = new CustomTableHeaderRenderer();
-//	private final PolicyTableRenderer customTCR = new PolicyTableRenderer();
-//	private static LoggingEngine logging;
-//
-//	PolFees polFees;
-//	PolMasterRepository polMasterRepository;
-//	PolFeesRepository polFeesRepository;
-//	PolMtrVehRepository polMtrVehRepository;
-//	PolRiskRepository polRiskRepository;
-//	PolItemRepository polItemRepository;
-//	PolItemBenRepository polItemBenRepository;
-//	Xmm600Repository xmm600Repository;
-//	Xmm106Repository xmm106Repository;
-//	Xmm023Repository xmm023Repository;
-//	DbCommandExecutor dbCommandExecutor;
-//	EntityManager em;
-//	EntityManagerFactory emf;
-//	private String polNo = null;
-//	String myDocuments = new JFileChooser().getFileSystemView().getDefaultDirectory().toString();
-//	Integer maxEndtCnt = new Integer(0);
-//	private boolean skipPolicy = true;
-//	private boolean branchExists = true;
-//
-//	@SuppressWarnings("rawtypes")
-//	Map mainMap = new LinkedHashMap();
-//
-//	public Main_Screen() {
-//
-//		logging = LoggingEngine.getInstance();
-//		logging.setReady(Main_Screen.class.getName());
-//		logging.changeLoggingLevel(Level.FINE);
-//		logging.setConsoleLogging(false);
-//
-//		componentOrientation = new ChangeComponentOrientation();
-//		componentOrientation.setThePanel(this);
-//
-//		setLayout(new BorderLayout(0, 0));
-//
-//		buttonPanel = new JPanel();
-//		buttonPanel.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
-//		buttonPanel.setAutoscrolls(true);
-//		buttonPanel.setPreferredSize(new Dimension(10, 65));
-//		add(buttonPanel, BorderLayout.NORTH);
-//
-//		importBtn = new JButton("Import");
-//		importBtn.setBounds(6, 12, 155, 45);
-//		importBtn.setIcon(new ImageIcon(Main_Screen.class.getResource("/icons/main_new_rez.png")));
-//		importBtn.setHorizontalTextPosition(SwingConstants.RIGHT);
-//		importBtn.setPreferredSize(new Dimension(150, 33));
-//		importBtn.setBorder(new SoftBevelBorder(BevelBorder.RAISED, null, null, null, null));
-//		importBtn.setFont(new Font("Arial", Font.BOLD, 12));
-//		importBtn.setEnabled(false);
-//		importBtn.setActionCommand("start");
-//		importBtn.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(final ActionEvent e) {
-//
-//				try {
-//
-//					if (checkConnectionToPortal()) {
-//						createJsonRecords();
-//					} else {
-//						setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-//
-//					}
-//
-//				} catch (final AuthenticationException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				} catch (final ClientProtocolException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				} catch (final IOException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				}
-//
-//			}
-//
-//		});
-//
-//		buttonPanel.setLayout(null);
-//		buttonPanel.add(importBtn);
-//
-//		historyBtn = new JButton("Import History");
-//		historyBtn.setBounds(1020, 12, 155, 45);
-//		historyBtn.setIcon(new ImageIcon(Main_Screen.class.getResource("/icons/main_new_rez.png")));
-//		historyBtn.setHorizontalTextPosition(SwingConstants.RIGHT);
-//		historyBtn.setPreferredSize(new Dimension(150, 33));
-//		historyBtn.setBorder(new SoftBevelBorder(BevelBorder.RAISED, null, null, null, null));
-//		historyBtn.setFont(new Font("Arial", Font.BOLD, 12));
-//		historyBtn.setEnabled(true);
-//		historyBtn.setActionCommand("start");
-//		historyBtn.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(final ActionEvent e) {
-//
-//				try {
-//
-//					int selectedOption = JOptionPane.showConfirmDialog(null,
-//							"Do you want to run historical data for January 2020?", "Choose",
-//							JOptionPane.YES_NO_OPTION);
-//					if (selectedOption == JOptionPane.NO_OPTION) {
-//						System.exit(1);
-//					}
-//
-//					if (checkConnectionToPortal()) {
-//						createHistoryJsonRecords();
-//					} else {
-//						setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-//
-//					}
-//
-//				} catch (final AuthenticationException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				} catch (final ClientProtocolException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				} catch (final IOException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				}
-//
-//			}
-//
-//		});
-//
-//		buttonPanel.setLayout(null);
-//		// buttonPanel.add(historyBtn);
-//
-//		validateBtn = new JButton("Validate Records");
-//		// validateBtn.setBounds(810, 9, 400, 45);
-//		// 690, 8, 114, 48
-//		validateBtn.setBounds(810, 9, 200, 48);
-//		validateBtn.setIcon(new ImageIcon(Main_Screen.class.getResource("/icons/main_new_rez.png")));
-//		validateBtn.setHorizontalTextPosition(SwingConstants.RIGHT);
-//		validateBtn.setPreferredSize(new Dimension(150, 33));
-//		validateBtn.setBorder(new SoftBevelBorder(BevelBorder.RAISED, null, null, null, null));
-//		validateBtn.setFont(new Font("Arial", Font.BOLD, 12));
-//		validateBtn.setEnabled(true);
-//		validateBtn.setActionCommand("start");
-//		validateBtn.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(final ActionEvent e) {
-//
-//				try {
-//					validateJsonRecords();
-//				} catch (AuthenticationException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				} catch (ClientProtocolException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				} catch (IOException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				}
-//
-//			}
-//
-//		});
-//
-//		buttonPanel.setLayout(null);
-//		buttonPanel.add(validateBtn);
-//
-//		final JSeparator separator = new JSeparator();
-//		separator.setBackground(Color.DARK_GRAY);
-//		separator.setBounds(175, 12, 13, 45);
-//		separator.setOrientation(SwingConstants.VERTICAL);
-//		separator.setFocusable(true);
-//		separator.setForeground(Color.DARK_GRAY);
-//		separator.setAutoscrolls(true);
-//		separator.setPreferredSize(new Dimension(10, 20));
-//		buttonPanel.add(separator);
-//
-//		startdateLbl = new JLabel("Start date : ");
-//		startdateLbl.setBounds(192, 8, 79, 26);
-//		buttonPanel.add(startdateLbl);
-//
-//		startDatePicker = new JDateChooser();
-//		startDatePicker.setDate(convertedDate);
-//		startDatePicker.setDateFormatString("yyyy-MM-dd");
-//		startDatePicker.setBounds(275, 8, 155, 26);
-//		buttonPanel.add(startDatePicker);
-//
-//		endDateLbl = new JLabel("End date : ");
-//		endDateLbl.setBounds(192, 35, 79, 26);
-//		buttonPanel.add(endDateLbl);
-//
-//		endDatePicker = new JDateChooser();
-//		endDatePicker.setDate(convertedDate);
-//		endDatePicker.setDateFormatString("yyyy-MM-dd");
-//		endDatePicker.setBounds(275, 35, 155, 26);
-//		buttonPanel.add(endDatePicker);
-//
-//		polNoLbl = new JLabel("Policy Number : ");
-//		polNoLbl.setBounds(442, 6, 94, 26);
-//		buttonPanel.add(polNoLbl);
-//
-//		agencyRefLbl = new JLabel("Veh Reg No : ");
-//		agencyRefLbl.setBounds(442, 33, 94, 26);
-//		buttonPanel.add(agencyRefLbl);
-//
-//		findBtn = new JButton("Search");
-//		findBtn.setIcon(new ImageIcon(Main_Screen.class.getResource("/icons/main_find.png")));
-//		findBtn.setPreferredSize(new Dimension(150, 33));
-//		findBtn.setHorizontalTextPosition(SwingConstants.RIGHT);
-//		findBtn.setFont(new Font("Arial", Font.BOLD, 12));
-//		findBtn.setBorder(new SoftBevelBorder(BevelBorder.RAISED, null, null, null, null));
-//		findBtn.setBounds(690, 8, 114, 48);
-//		findBtn.setActionCommand("start");
-//		findBtn.addActionListener(this);
-//		buttonPanel.add(findBtn);
-//
-//		JPopupMenu menu = new JPopupMenu();
-//		Action cut = new DefaultEditorKit.CutAction();
-//		cut.putValue(Action.NAME, "Cut");
-//		cut.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
-//		menu.add(cut);
-//
-//		Action copy = new DefaultEditorKit.CopyAction();
-//		copy.putValue(Action.NAME, "Copy");
-//		copy.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
-//		menu.add(copy);
-//
-//		Action paste = new DefaultEditorKit.PasteAction();
-//		paste.putValue(Action.NAME, "Paste");
-//		paste.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
-//		menu.add(paste);
-//
-//		Action selectAll = new SelectAll();
-//		menu.add(selectAll);
-//
-//		polNoField = new JTextField();
-//		polNoField.setBounds(535, 6, 143, 26);
-//		polNoField.setFont(new Font("Arial", Font.BOLD, 13));
-//		polNoField.setColumns(10);
-//		buttonPanel.add(polNoField);
-//		polNoField.setComponentPopupMenu(menu);
-//
-//		vehRegRefField = new JTextField();
-//		vehRegRefField.setBounds(535, 33, 143, 26);
-//		vehRegRefField.setFont(new Font("Arial", Font.BOLD, 13));
-//		vehRegRefField.setColumns(10);
-//		buttonPanel.add(vehRegRefField);
-//		vehRegRefField.setComponentPopupMenu(menu);
-//		model = new DefaultTableModel(rezColsName, 0);
-//
-//		customTCR.setHorizontalAlignment(SwingConstants.CENTER);
-//		THR.setHorizontalAlignment(SwingConstants.CENTER);
-//
-//		table = new JTable(model);
-//		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-//		table.setGridColor(UIManager.getColor("InternalFrame.inactiveTitleForeground"));
-//		table.getTableHeader().setDefaultRenderer(THR);
-//		table.setDefaultRenderer(Object.class, customTCR);
-//		table.setFont(new Font("Dialog", Font.PLAIN, 14));
-//		table.setBackground(UIManager.getColor("InternalFrame.borderColor"));
-//
-//		scrollPane = new JScrollPane();
-//		scrollPane.setViewportView(table);
-//		add(scrollPane, BorderLayout.CENTER);
-//
-//	}
-//
-//	class Task extends SwingWorker<Void, Void> {
-//		/*
-//		 * Main task. Executed in background thread.
-//		 */
-//		@Override
-//		public Void doInBackground() {
-//			final Random random = new Random();
-//			int progress = 0;
-//			// Initialize progress property.
-//			setProgress(0);
-//			while (progress < 100) {
-//				// Sleep for up to one second.
-//				try {
-//
-//					Thread.sleep(random.nextInt(1000));
-//				} catch (final InterruptedException ignore) {
-//				}
-//				// Make random progress.
-//				progress += random.nextInt(10);
-//				setProgress(Math.min(progress, 100));
-//			}
-//			return null;
-//		}
-//
-//		/*
-//		 * Executed in event dispatching thread
-//		 */
-//		@Override
-//		public void done() {
-//			Toolkit.getDefaultToolkit().beep();
-//			findBtn.setEnabled(true);
-//			setCursor(null); // turn off the wait cursor
-//
-//		}
-//
-//	}
-//
-//	@Override
-//	public void actionPerformed(final ActionEvent evt) {
-//
-//		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-//
-//		task = new Task();
-//		task.addPropertyChangeListener(this);
-//		findRecord();
-//		// task.execute();
-//		findBtn.setEnabled(true);
-//
-//	}
-//
-//	@Override
-//	public void propertyChange(final PropertyChangeEvent evt) {
-//		if ("progress" == evt.getPropertyName()) {
-//			final int progress = (Integer) evt.getNewValue();
-//			progressBar.setValue(progress);
-//
-//		}
-//	}
-//
-//	public List<PolMaster> selectionHistoryCriteria() {
-//		List<PolMaster> polMasters = null;
-//
-//		final LocalDate startDate = LocalDate.parse("2020-01-01");
-//		final LocalDate endDate = LocalDate.parse("2020-01-20");
-//
-//		prepareDataFlow();
-//		return polMasters = dbCommandExecutor.executeCommand(() -> {
-//
-//			return polMasterRepository.findPolMasterRecordByTranDate(DateUtils.convertToDateViaInstant(startDate),
-//					DateUtils.convertToDateViaInstant(endDate));
-//		});
-//
-//	}
-//
-////	public List<PolMaster> getPolicyMasterRecordsByFilter() {
-////		List<PolMaster> polMasters = null;
-////
-////		if (polNoField.getText().length() > 0) {
-////			prepareDataFlow();
-////			polMasters = dbCommandExecutor.executeCommand(() -> {
-////
-////				return polMasterRepository.findPolMasterRecordByPolNo(polNoField.getText());
-////			});
-////
-////		} else if (vehRegRefField.getText().length() > 0) {
-////			prepareDataFlow();
-////			polNo = dbCommandExecutor.executeCommand(() -> {
-////				return polMtrVehRepository.findPolNoByVehReg(vehRegRefField.getText());
-////			});
-////			if (polNo != null) {
-////				polMasters = dbCommandExecutor.executeCommand(() -> {
-////
-////					return polMasterRepository.findPolMasterRecordByPolNo(polNo);
-////				});
-////			}
-////		} else if (startDatePicker.getDate() != null && endDatePicker.getDate() != null) {
-////
-////			// get dates from date pickers
-////			final LocalDate startDate = startDatePicker.getDate().toInstant().atZone(ZoneId.systemDefault())
-////					.toLocalDate();
-////			final LocalDate endDate = endDatePicker.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-////
-////			// compare if start date greater than end date
-////			if (startDate.isAfter(endDate)) {
-////				JOptionPane.showMessageDialog(null, "Start date is after end date!", JOptionPane.MESSAGE_PROPERTY,
-////						JOptionPane.WARNING_MESSAGE);
-////			} else {
-////				prepareDataFlow();
-////				polMasters = dbCommandExecutor.executeCommand(() -> {
-////
-////					return polMasterRepository.findPolMasterRecordByTranDate(
-////							DateUtils.convertToDateViaInstant(startDate), DateUtils.convertToDateViaInstant(endDate));
-////				});
-////			}
-////		} else {
-////
-////			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-////			findBtn.setEnabled(true);
-////			JOptionPane.showMessageDialog(null, "Please Select Criteria to search on!", JOptionPane.MESSAGE_PROPERTY,
-////					JOptionPane.WARNING_MESSAGE);
-////		}
-////
-////		return polMasters;
-////
-////	}
-//
-//	public List<PolMaster> getPolicyMasterRecordsByFilter() {
-//		List<PolMaster> polMasters = null;
-//
-//		try {
-//			prepareDataFlow();
-//
-//			if (!polNoField.getText().isEmpty()) {
-//				polMasters = executePolNoSearch(polNoField.getText());
-//			} else if (!vehRegRefField.getText().isEmpty()) {
-//				polMasters = executeVehRegSearch(vehRegRefField.getText());
-//			} else if (startDatePicker.getDate() != null && endDatePicker.getDate() != null) {
-//				polMasters = executeDateRangeSearch();
-//			} else {
-//				showMessage("Please Select Criteria to search on!", JOptionPane.WARNING_MESSAGE);
-//			}
-//		} finally {
-//			resetUIState();
-//		}
-//
-//		return polMasters;
-//	}
-//
-//	private List<PolMaster> executePolNoSearch(String polNo) {
-//		return dbCommandExecutor.executeCommand(() -> polMasterRepository.findPolMasterRecordByPolNo(polNo));
-//	}
-//
-//	private List<PolMaster> executeVehRegSearch(String vehRegRef) {
-//		String polNo = dbCommandExecutor.executeCommand(() -> polMtrVehRepository.findPolNoByVehReg(vehRegRef));
-//		if (polNo != null) {
-//			return executePolNoSearch(polNo);
-//		} else {
-//			return null;
-//		}
-//	}
-//
-//	private List<PolMaster> executeDateRangeSearch() {
-//		LocalDate startDate = convertToLocalDate(startDatePicker.getDate());
-//		LocalDate endDate = convertToLocalDate(endDatePicker.getDate());
-//
-//		if (startDate.isAfter(endDate)) {
-//			showMessage("Start date is after end date!", JOptionPane.WARNING_MESSAGE);
-//			return null;
-//		}
-//
-//		return dbCommandExecutor.executeCommand(() -> polMasterRepository.findPolMasterRecordByTranDate(
-//				DateUtils.convertToDateViaInstant(startDate),
-//				DateUtils.convertToDateViaInstant(endDate)));
-//	}
-//
-//	private LocalDate convertToLocalDate(Date date) {
-//		return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-//	}
-//
-//	private void showMessage(String message, int messageType) {
-//		JOptionPane.showMessageDialog(null, message, JOptionPane.MESSAGE_PROPERTY, messageType);
-//	}
-//
-//	private void resetUIState() {
-//		setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-//		findBtn.setEnabled(true);
-//	}
-//
-//	@SuppressWarnings("unchecked")
-//	public void createHistoryJsonRecords() throws AuthenticationException, ClientProtocolException, IOException {
-//
-//		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-//
-//		final List<PolMaster> polMasters = selectionHistoryCriteria();
-//
-//		model.setRowCount(0);
-//
-//		if (polMasters != null) {
-//
-//			for (final PolMaster polMaster : polMasters) {
-//				skipPolicy = dbCommandExecutor.executeCommand(() -> {
-//					return polMasterRepository.isSkipPolicy(polMaster.getPolNo(), polMaster.getRenCnt());
-//				});
-//
-//				if (!skipPolicy) {
-//					List<PolMtrVeh> polMtrVehs;
-//
-//					if (vehRegRefField.getText().length() > 0) {
-//
-//						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-//							return polMtrVehRepository.findPolMtrVehicleByVehRegNo(polMaster.getPolNo(),
-//									polMaster.getRenCnt(), polMaster.getEndtCnt(), vehRegRefField.getText());
-//						});
-//					} else {
-//						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-//							return polMtrVehRepository.findPolMtrVehicleList(polMaster.getPolNo(),
-//									polMaster.getRenCnt(), polMaster.getEndtCnt());
-//						});
-//					}
-//
-//					for (final PolMtrVeh mtrVeh : polMtrVehs) {
-//
-//						final List<PolRisk> polRisks = dbCommandExecutor.executeCommand(() -> {
-//							return polRiskRepository.findPolRiskRecord(polMaster.getPolNo(), polMaster.getRenCnt(),
-//									polMaster.getEndtCnt(), mtrVeh.getRiskGrp(), mtrVeh.getRiskNo());
-//						});
-//
-//						for (final PolRisk polRisk : polRisks) {
-//
-//							pctIncBaseAP = dbCommandExecutor.executeCommand(() -> {
-//								return xmm106Repository.findPctIncBaseAPForClass(polRisk.getBusinessClass(),
-//										mtrVeh.getCoverType());
-//							});
-//
-//							PolItem polItem = polItemRepository.findByPrimaryKey(polMaster.getPolNo(),
-//									polMaster.getRenCnt(),
-//									polMaster.getEndtCnt(), mtrVeh.getRiskGrp(), mtrVeh.getRiskNo(),
-//									mtrVeh.getItemNo());
-//
-//							polFees = dbCommandExecutor.executeCommand(() -> {
-//								return polFeesRepository.findByPrimaryKey(polMaster.getPolNo(),
-//										polMaster.getRenCnt(), 0);
-//							});
-//
-//							final List<PolItemBen> itemBens = dbCommandExecutor.executeCommand(() -> {
-//								return polItemBenRepository.findPolItemBenRecord(polMaster.getPolNo(),
-//										polMaster.getRenCnt(), polMaster.getEndtCnt(), mtrVeh.getRiskGrp(),
-//										mtrVeh.getRiskNo(), mtrVeh.getItemNo());
-//							});
-//
-//							final List<Xmm600> xmm600IntermediaryList = dbCommandExecutor.executeCommand(() -> {
-//								return xmm600Repository.findInterMediary(polMaster.getAgent());
-//
-//							});
-//
-//							final List<Xmm600> xmm600ClientList = dbCommandExecutor.executeCommand(() -> {
-//								return xmm600Repository.findClient(polMaster.getInsured());
-//
-//							});
-//
-//							for (final Xmm600 xmm600InterMediary : xmm600IntermediaryList) {
-//								MapCreator mapCreator = new MapCreator();
-//								mainMap = mapCreator.createPolicyMap(polMaster, polFees, polRisk, mtrVeh, polItem,
-//										itemBens,
-//										pctIncBaseAP);
-//
-//								result = JsonWriter.writeJsonPolicyRecord(mainMap, xmm600InterMediary, polMaster,
-//										itemBens, xmm600ClientList);
-//
-//								importJsonRecords("policy", result, polMaster.getPolNo());
-//
-//								System.out.println(result);
-//
-//							}
-//						}
-//					}
-//				}
-//			}
-//
-//		}
-//
-//		;
-//
-//		importBtn.setEnabled(false);
-//
-//		setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-//
-//		mainMap.clear();
-//		// printWriter.close();
-//		em.close();
-//		emf.close();
-//		JOptionPane.showMessageDialog(null, " History Import Process Completed !", "History Data Import",
-//				JOptionPane.INFORMATION_MESSAGE);
-//
-//	}
-//
-//	@SuppressWarnings("unchecked")
-//	public void createJsonRecords() throws AuthenticationException, ClientProtocolException, IOException {
-//
-//		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-//
-//		FileWriter file = new FileWriter(myDocuments + "\\results.json");
-//		BufferedWriter bw = null;
-//		PrintWriter pw = null;
-//
-//		importBtn.setEnabled(false);
-//
-//		// createBranches();
-//
-//		final List<PolMaster> polMasters = getPolicyMasterRecordsByFilter();
-//		List<PolItemBen> itemBens;
-//
-//		model.setRowCount(0);
-//
-//		if (polMasters != null) {
-//
-//			for (final PolMaster polMaster : polMasters) {
-//				skipPolicy = dbCommandExecutor.executeCommand(() -> {
-//					return polMasterRepository.isSkipPolicy(polMaster.getPolNo(), polMaster.getRenCnt());
-//				});
-//
-//				if (!skipPolicy) {
-//					List<PolMtrVeh> polMtrVehs;
-//
-//					if (vehRegRefField.getText().length() > 0) {
-//
-//						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-//							return polMtrVehRepository.findPolMtrVehicleByVehRegNo(polMaster.getPolNo(),
-//									polMaster.getRenCnt(), polMaster.getEndtCnt(), vehRegRefField.getText());
-//						});
-//					} else {
-//						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-//							return polMtrVehRepository.findPolMtrVehicleList(polMaster.getPolNo(),
-//									polMaster.getRenCnt(), polMaster.getEndtCnt());
-//						});
-//					}
-//
-//					for (final PolMtrVeh mtrVeh : polMtrVehs) {
-//
-//						final List<PolRisk> polRisks = dbCommandExecutor.executeCommand(() -> {
-//							return polRiskRepository.findPolRiskRecord(polMaster.getPolNo(), polMaster.getRenCnt(),
-//									polMaster.getEndtCnt(), mtrVeh.getRiskGrp(), mtrVeh.getRiskNo());
-//						});
-//
-//						for (final PolRisk polRisk : polRisks) {
-//
-//							pctIncBaseAP = dbCommandExecutor.executeCommand(() -> {
-//								return xmm106Repository.findPctIncBaseAPForClass(polRisk.getBusinessClass(),
-//										mtrVeh.getCoverType());
-//							});
-//
-//							PolItem polItem = polItemRepository.findByPrimaryKey(polMaster.getPolNo(),
-//									polMaster.getRenCnt(),
-//									polMaster.getEndtCnt(), mtrVeh.getRiskGrp(), mtrVeh.getRiskNo(),
-//									mtrVeh.getItemNo());
-//
-//							polFees = dbCommandExecutor.executeCommand(() -> {
-//								return polFeesRepository.findByPrimaryKey(polMaster.getPolNo(),
-//										polMaster.getRenCnt(), 0);
-//							});
-//
-//							// check if policy is a non-premium endorsement
-//							if (polRisk.getPremDue().compareTo(BigDecimal.ZERO) == 0) {
-//
-//								maxEndtCnt = dbCommandExecutor.executeCommand(() -> {
-//									return polRiskRepository.getMaxEndtCount(polRisk);
-//								});
-//
-//								itemBens = dbCommandExecutor.executeCommand(() -> {
-//
-//									return polItemBenRepository.findPolItemBenRecord(polMaster.getPolNo(),
-//											polMaster.getRenCnt(), maxEndtCnt, mtrVeh.getRiskGrp(),
-//											mtrVeh.getRiskNo(),
-//											mtrVeh.getItemNo());
-//								});
-//							} else {
-//
-//								itemBens = dbCommandExecutor.executeCommand(() -> {
-//									return polItemBenRepository.findPolItemBenRecord(polMaster.getPolNo(),
-//											polMaster.getRenCnt(), polMaster.getEndtCnt(), mtrVeh.getRiskGrp(),
-//											mtrVeh.getRiskNo(),
-//											mtrVeh.getItemNo());
-//								});
-//
-//							}
-//
-//							final List<Xmm600> xmm600IntermediaryList = dbCommandExecutor.executeCommand(() -> {
-//								return xmm600Repository.findInterMediary(polMaster.getAgent());
-//
-//							});
-//
-//							final List<Xmm600> xmm600ClientList = dbCommandExecutor.executeCommand(() -> {
-//								return xmm600Repository.findClient(polMaster.getInsured());
-//
-//							});
-//
-//							for (final Xmm600 xmm600InterMediary : xmm600IntermediaryList) {
-//
-//								if (Validations.recordIsValidated(polMaster, polRisk, mtrVeh, itemBens,
-//										xmm600ClientList,
-//										xmm600IntermediaryList, logging)) {
-//
-//									System.out.println(polMaster.getPolNo());
-//									MapCreator mapCreator = new MapCreator();
-//									mainMap = new LinkedHashMap();
-//									mainMap = mapCreator.createPolicyMap(polMaster, polFees, polRisk, mtrVeh, polItem,
-//											itemBens,
-//											pctIncBaseAP);
-//
-//									result = JsonWriter.writeJsonPolicyRecord(mainMap, xmm600InterMediary, polMaster,
-//											itemBens, xmm600ClientList);
-//
-//									response = importJsonRecords("policy", result, polMaster.getPolNo());
-//
-//									System.out.println(result);
-//
-//									bw = new BufferedWriter(file);
-//									pw = new PrintWriter(bw);
-//									pw.println(polMaster.getPolNo() + " " + mtrVeh.getCertRef() + " " + response);
-//									pw.flush();
-//
-//								} else {
-//
-//								}
-//							}
-//						}
-//					}
-//				}
-//			}
-//
-//		}
-//
-//		;
-//
-//		importBtn.setEnabled(false);
-//
-//		setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-//
-//		mainMap.clear();
-//		// printWriter.close();
-//		// Desktop.getDesktop().open(new File(myDocuments + "\\results.json"));
-//		if (pw != null) {
-//			pw.close();
-//		}
-//		if (bw != null) {
-//			bw.close();
-//		}
-//		file.close();
-//		em.close();
-//		emf.close();
-//		JOptionPane.showMessageDialog(null, "Import Process Completed !", "Data Import",
-//				JOptionPane.INFORMATION_MESSAGE);
-//
-//	}
-//
-//	@SuppressWarnings({ "unchecked", "resource" })
-//	public void validateJsonRecords() throws AuthenticationException, ClientProtocolException, IOException {
-//		JsonObject jsonObject = new JsonObject();
-//		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-//
-//		FileWriter file = new FileWriter(myDocuments + "\\validation.json");
-//		BufferedWriter bw = null;
-//		PrintWriter pw = null;
-//
-//		final List<PolMaster> polMasters = getPolicyMasterRecordsByFilter();
-//
-//		model.setRowCount(0);
-//
-//		if (polMasters != null) {
-//
-//			for (final PolMaster polMaster : polMasters) {
-//				skipPolicy = dbCommandExecutor.executeCommand(() -> {
-//					return polMasterRepository.isSkipPolicy(polMaster.getPolNo(), polMaster.getRenCnt());
-//				});
-//
-//				if (!skipPolicy) {
-//					List<PolMtrVeh> polMtrVehs;
-//
-//					if (vehRegRefField.getText().length() > 0) {
-//
-//						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-//							return polMtrVehRepository.findPolMtrVehicleByVehRegNo(polMaster.getPolNo(),
-//									polMaster.getRenCnt(), polMaster.getEndtCnt(), vehRegRefField.getText());
-//						});
-//					} else {
-//						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-//							return polMtrVehRepository.findPolMtrVehicleList(polMaster.getPolNo(),
-//									polMaster.getRenCnt(), polMaster.getEndtCnt());
-//						});
-//					}
-//
-//					for (final PolMtrVeh mtrVeh : polMtrVehs) {
-//
-//						final List<PolRisk> polRisks = dbCommandExecutor.executeCommand(() -> {
-//							return polRiskRepository.findPolRiskRecord(polMaster.getPolNo(), polMaster.getRenCnt(),
-//									polMaster.getEndtCnt(), mtrVeh.getRiskGrp(), mtrVeh.getRiskNo());
-//						});
-//
-//						for (final PolRisk polRisk : polRisks) {
-//
-//							pctIncBaseAP = dbCommandExecutor.executeCommand(() -> {
-//								return xmm106Repository.findPctIncBaseAPForClass(polRisk.getBusinessClass(),
-//										mtrVeh.getCoverType());
-//							});
-//
-//							final List<PolItemBen> itemBens = dbCommandExecutor.executeCommand(() -> {
-//								return polItemBenRepository.findPolItemBenRecord(polMaster.getPolNo(),
-//										polMaster.getRenCnt(), polMaster.getEndtCnt(), mtrVeh.getRiskGrp(),
-//										mtrVeh.getRiskNo(), mtrVeh.getItemNo());
-//							});
-//
-//							final List<Xmm600> xmm600IntermediaryList = dbCommandExecutor.executeCommand(() -> {
-//								return xmm600Repository.findInterMediary(polMaster.getAgent());
-//
-//							});
-//
-//							final List<Xmm600> xmm600ClientList = dbCommandExecutor.executeCommand(() -> {
-//								return xmm600Repository.findClient(polMaster.getInsured());
-//
-//							});
-//
-//							for (final Xmm600 xmm600 : xmm600ClientList) {
-//
-//								jsonObject = (JsonObject) validateRecord(polMaster, polRisk, mtrVeh, xmm600);
-//
-//								if (jsonObject.isJsonNull() || jsonObject == null
-//										|| jsonObject.toString().equals("{}")) {
-//
-//								} else {
-//									bw = new BufferedWriter(file);
-//									pw = new PrintWriter(bw);
-//									pw.println(jsonObject.toString());
-//									pw.flush();
-//								}
-//							}
-//
-//						}
-//					}
-//				}
-//			}
-//
-//			Desktop.getDesktop().open(new File(myDocuments + "\\validation.json"));
-//
-//			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-//
-//			em.close();
-//			emf.close();
-//
-//			pw.close();
-//			bw.close();
-//			file.close();
-//			JOptionPane.showMessageDialog(null, "Validation Process Completed !", "Data Validation",
-//					JOptionPane.INFORMATION_MESSAGE);
-//		} else {
-//			JOptionPane.showMessageDialog(null, "No records To be Validated !", "Data Validation",
-//					JOptionPane.INFORMATION_MESSAGE);
-//		}
-//
-//	}
-//
-//	private JsonElement validateRecord(final PolMaster polMaster, final PolRisk polRisk, final PolMtrVeh mtrVeh,
-//			final Xmm600 xmm600) {
-//		JsonObject jsonObject = new JsonObject();
-//		String result = "";
-//		boolean isValid = true;
-//		boolean foundScheduleCode = false;
-//
-//		Properties propSchedule = new Properties();
-//
-//		// InputStream inputStream;
-//		final InputStream inputStream = MapCreator.class.getResourceAsStream(System.getProperty("PropFile"));
-//		// inputStream = MapCreator.class.getClassLoader().getResourceAsStream("primeLiveConfig.properties");
-//		propSchedule = new Properties();
-//
-//		try {
-//			propSchedule.load(inputStream);
-//		} catch (IOException e1) {
-//
-//			e1.printStackTrace();
-//		}
-//
-//		if (polRisk.getComDate() == null) {
-//			jsonObject.addProperty("riskCommenceDateIdentification", polMaster.getPolNo());
-//			jsonObject.addProperty("riskCommenceDateDescription", "Risk Commence Date is Null");
-//			isValid = false;
-//		}
-//
-//		if (polRisk.getExpiryDate() == null) {
-//			jsonObject.addProperty("riskExpiryDateIdentification", polMaster.getPolNo());
-//			jsonObject.addProperty("riskExpiryDateDescription", "Risk Expiry Date is Null");
-//			isValid = false;
-//		}
-//
-//		if (xmm600.getName1().isEmpty()) {
-//			isValid = false;
-//		}
-//
-//		if (xmm600.getBirthday() == null) {
-//
-//			jsonObject.addProperty("clientBirthdayIdentification",
-//					xmm600.getClientNo() + " " + polMaster.getPolNo() + "  " + xmm600.getName1());
-//			jsonObject.addProperty("clientBirthDayDescription", "Birthday is Null");
-//			isValid = false;
-//		}
-//
-//		if (xmm600.getBirthday() != null) {
-//			if (!GenericValidator.isDate(xmm600.getBirthday().toString().substring(0, 10), "yyyy-MM-dd", true)) {
-//
-//				jsonObject.addProperty("invalidBirthdayIdentification",
-//						xmm600.getClientNo() + " " + polMaster.getPolNo() + "  " + xmm600.getName1().toString() + " "
-//								+ xmm600.getBirthday().toString().substring(0, 10));
-//				jsonObject.addProperty("Invalid BirthdayDescription", "Invalid Birthday");
-//				isValid = false;
-//			}
-//		}
-//
-//		if (xmm600.getTelno7() == null || xmm600.getTelno7().isEmpty() || xmm600.getTelno7().length() < 10) {
-//
-//			jsonObject.addProperty("invalidClientTelephoneIdentification", xmm600.getClientNo() + " "
-//					+ polMaster.getPolNo() + "  " + xmm600.getName1().toString() + " " + xmm600.getTelno7().toString());
-//			jsonObject.addProperty("invalidClientTelephoneDescription", "Invalid Client Telephone");
-//			isValid = false;
-//		}
-//
-//		if (mtrVeh.getColour() == null || mtrVeh.getColour().isEmpty()) {
-//			jsonObject.addProperty("motorColorIdentification",
-//					polMaster.getPolNo() + " " + xmm600.getName1().toString() + " " + mtrVeh.getVehRegNo());
-//			jsonObject.addProperty("motorColoreDescription", "No Motor Colour");
-//			isValid = false;
-//		}
-//
-//		if (mtrVeh.getNoSeats() == null || mtrVeh.getNoSeats() == 0) {
-//			jsonObject.addProperty("numberOfSeatsIdentification",
-//					polMaster.getPolNo() + " " + xmm600.getName1().toString() + " " + mtrVeh.getVehRegNo());
-//			jsonObject.addProperty("numberOfSeatDescription", "Number of Seats should be greater than Zero!!");
-//			isValid = false;
-//		}
-//
-//		@SuppressWarnings("unchecked")
-//		Enumeration<String> enums = (Enumeration<String>) propSchedule.propertyNames();
-//
-//		while (enums.hasMoreElements() && (!foundScheduleCode)) {
-//			String key = enums.nextElement();
-//
-//			if (mtrVeh.getCertRef().replace(" ", "").replace("  ", "").replace("   ", "").trim()
-//					.equalsIgnoreCase(key)) {
-//				foundScheduleCode = true;
-//
-//			}
-//
-//		}
-//
-//		if (!foundScheduleCode) {
-//			jsonObject.addProperty("certRefNotMappedIdentification",
-//					polMaster.getPolNo() + " " + xmm600.getName1().toString() + " " + mtrVeh.getVehRegNo() + " "
-//							+ mtrVeh.getCertRef());
-//			jsonObject.addProperty("certRefNotMappedDescription", "Cert Ref Not Mapped!!");
-//			isValid = false;
-//
-//		}
-//
-//		return jsonObject;
-//	}
-//
-//	private void writeJsonRecords(final String polNo, final Integer renCnt, final Integer endtCnt) {
-//
-//		JsonObject jsonObject = new JsonObject();
-//
-//		jsonObject.addProperty("polNo", polNo);
-//		jsonObject.addProperty("renCnt", renCnt);
-//		jsonObject.addProperty("endtCnt", endtCnt);
-//		jsonObject.addProperty("trandate", endtCnt);
-//
-//		String result = new Gson().toJson(jsonObject);
-//
-//		// System.out.println(result);
-//
-//	}
-//
-//	/*
-//	 * private boolean recordIsValidated(final PolMaster polMaster, final PolRisk polRisk, final PolMtrVeh mtrVeh, final
-//	 * List<PolItemBen> itemBens, final List<Xmm600> xmm600ClientList, final List<Xmm600> xmm600IntermediaryList) {
-//	 * 
-//	 * // return true;
-//	 * 
-//	 * JsonObject jsonObject = new JsonObject(); String result = ""; boolean isValid = true; InputStream inputStream;
-//	 * Properties propSchedule = new Properties(); boolean foundScheduleCode = false;
-//	 * 
-//	 * inputStream = MapCreator.class.getClassLoader().getResourceAsStream("primeLiveConfig.properties"); propSchedule =
-//	 * new Properties();
-//	 * 
-//	 * try { propSchedule.load(inputStream); } catch (IOException e1) {
-//	 * 
-//	 * e1.printStackTrace(); }
-//	 * 
-//	 * @SuppressWarnings("unchecked") Enumeration<String> enums = (Enumeration<String>) propSchedule.propertyNames();
-//	 * 
-//	 * while (enums.hasMoreElements() && (!foundScheduleCode)) { String key = enums.nextElement();
-//	 * 
-//	 * 
-//	 * if (mtrVeh.getCertRef().replace(" ", "").replace("  ", "").replace("   ", "").trim() .equalsIgnoreCase(key)) {
-//	 * foundScheduleCode = true;
-//	 * 
-//	 * }
-//	 * 
-//	 * }
-//	 * 
-//	 * if(!foundScheduleCode) { logging.setMessage(" Certificate reference Not mapped For :" + mtrVeh.getPolNo() +
-//	 * " OV2 CERT REF : " + mtrVeh.getCertRef()); isValid = false; }
-//	 * 
-//	 * if (itemBens.isEmpty()) { jsonObject.addProperty("NoItemBenefitsIdentification", polMaster.getPolNo() + " " +
-//	 * mtrVeh.getVehRegNo()); jsonObject.addProperty("NoItemBenefitsDescription", "Record Has No Item Benefits");
-//	 * logging.setMessage(polMaster.getPolNo() + " " + mtrVeh.getVehRegNo() + " Record Has No Item Benefits "); isValid
-//	 * = false; }
-//	 * 
-//	 * for (final Xmm600 xmm6002 : xmm600ClientList) {
-//	 * 
-//	 * if (polRisk.getComDate() == null) { jsonObject.addProperty("riskCommenceDateIdentification", polMaster.getPolNo()
-//	 * + " " + mtrVeh.getVehRegNo()); jsonObject.addProperty("riskCommenceDateDescription",
-//	 * "Risk Commence Date is Null"); logging.setMessage(polMaster.getPolNo() + " " + mtrVeh.getVehRegNo() +
-//	 * " Risk Commence Date is Null "); isValid = false; }
-//	 * 
-//	 * if (polRisk.getExpiryDate() == null) { jsonObject.addProperty("riskExpiryDateIdentification",
-//	 * polMaster.getPolNo() + " " + mtrVeh.getVehRegNo()); jsonObject.addProperty("riskExpiryDateDescription",
-//	 * "Risk Expiry Date is Null"); logging.setMessage(polMaster.getPolNo() + " " + mtrVeh.getVehRegNo() +
-//	 * " Risk Expiry Date is Null "); isValid = false; }
-//	 * 
-//	 * if (xmm6002.getName1().isEmpty()) { logging.setMessage( xmm6002.getName1().toString() + " " +
-//	 * xmm6002.getTelno7().toString() + " Client name is Null "); return false;
-//	 * 
-//	 * }
-//	 * 
-//	 * if (xmm6002.getBirthday() == null) {
-//	 * 
-//	 * jsonObject.addProperty("clientBirthdayIdentification", xmm6002.getClientNo() + " " + polMaster.getPolNo() + "  "
-//	 * + xmm6002.getName1()); jsonObject.addProperty("clientBirthDayDescription", "Birthday is Null");
-//	 * logging.setMessage( xmm6002.getName1().toString() + "  " + xmm6002.getTelno7().toString() +
-//	 * " Birthday is Null "); isValid = false; }
-//	 * 
-//	 * if (xmm6002.getBirthday() != null) { if (!GenericValidator.isDate(xmm6002.getBirthday().toString().substring(0,
-//	 * 10), "yyyy-MM-dd", true)) {
-//	 * 
-//	 * jsonObject.addProperty("invalidBirthdayIdentification", xmm6002.getClientNo() + " " + polMaster.getPolNo() + "  "
-//	 * + xmm6002.getName1().toString() + " " + xmm6002.getBirthday().toString().substring(0, 10));
-//	 * jsonObject.addProperty("Invalid BirthdayDescription", "Invalid Birthday"); logging.setMessage(
-//	 * xmm6002.getName1().toString() + "  " + xmm6002.getTelno7().toString() + " Invalid Birthday "); isValid = false; }
-//	 * }
-//	 * 
-//	 * if (xmm6002.getTelno7() == null || xmm6002.getTelno7().isEmpty() || xmm6002.getTelno7().length() < 10) {
-//	 * 
-//	 * jsonObject.addProperty("invalidClientTelephoneIdentification", xmm6002.getClientNo() + " " + polMaster.getPolNo()
-//	 * + "  " + xmm6002.getName1().toString() + " " + xmm6002.getTelno7().toString());
-//	 * jsonObject.addProperty("invalidClientTelephoneDescription", "Invalid Client Telephone");
-//	 * logging.setMessage(xmm6002.getClientNo().toString() + "  " + xmm6002.getName1().toString() + "  " +
-//	 * xmm6002.getTelno7().toString() + " Invalid Client Telephone "); isValid = false; }
-//	 * 
-//	 * if (mtrVeh.getColour() == null || mtrVeh.getColour().isEmpty()) {
-//	 * jsonObject.addProperty("motorColorIdentification", polMaster.getPolNo() + " " + xmm6002.getName1().toString() +
-//	 * " " + mtrVeh.getVehRegNo()); jsonObject.addProperty("motorColoreDescription", "No Motor Colour");
-//	 * logging.setMessage(polMaster.getPolNo() + "  " + mtrVeh.getVehRegNo() + " No Motor Colour "); isValid = false; }
-//	 * 
-//	 * if (mtrVeh.getNoSeats() == null || mtrVeh.getNoSeats() == 0) {
-//	 * jsonObject.addProperty("numberOfSeatsIdentification", polMaster.getPolNo() + " " + xmm6002.getName1().toString()
-//	 * + " " + mtrVeh.getVehRegNo()); jsonObject.addProperty("numberOfSeatDescription",
-//	 * "Number of Seats should be greater than Zero!!"); logging.setMessage(polMaster.getPolNo() + "  " +
-//	 * mtrVeh.getVehRegNo() + " Number of Seats should be greater than Zero!! "); isValid = false; } }
-//	 * 
-//	 * result = new Gson().toJson(jsonObject); System.out.println(result);
-//	 * 
-//	 * if (isValid) {
-//	 * 
-//	 * return true; } else { return false; }
-//	 * 
-//	 * }
-//	 */
-//
-//	private void createBranches() {
-//
-//		List<Xmm023> xmm023s = null;
-//		prepareDataFlow();
-//		xmm023s = dbCommandExecutor.executeCommand(() -> {
-//
-//			return xmm023Repository.findXmm023();
-//
-//		});
-//
-//		for (final Xmm023 xmm023 : xmm023s) {
-//
-//			if (!branchExists) {
-//				result = JsonWriter.writeJsonBranchRecord(xmm023);
-//				try {
-//					importJsonRecords("branch", result, "");
-//				} catch (AuthenticationException | IOException e) {
-//
-//					e.printStackTrace();
-//				}
-//				branchExists = true;
-//			}
-//		}
-//
-//	}
-//
-//	protected String importJsonRecords(final String url, final String json, final String polNo)
-//			throws ClientProtocolException, IOException, AuthenticationException {
-//
-//		final CloseableHttpResponse response = HttpAuthentication.getPostPolicyToPortalResponse("policy", json);
-//
-//		final HttpEntity body = response.getEntity();
-//
-//		final StatusLine statusLine = response.getStatusLine();
-//		System.out.println(response.getStatusLine());
-//		final String content = EntityUtils.toString(body);
-//
-//		if (statusLine.getStatusCode() == HttpCode.OK.getCode()) {
-//
-//			if (url.equals("policy")) {
-//				// updatePolMtrVeh(content);
-//
-//			}
-//			System.out.println(polNo.toString() + " " + HttpCode.OK.getCode());
-//
-//		} else {
-//			logging.setMessage(polNo.toString() + " " + content.toString());
-//			System.out.println(polNo.toString() + " " + content.toString());
-//		}
-//
-//		return content;
-//
-//	}
-//
-//	protected void getMIDSchedules() throws AuthenticationException {
-//
-//		final String branches = HttpAuthentication.getMIDBranches();
-//
-//	}
-//
-//	protected JsonArray getMIDBranches() throws AuthenticationException {
-//
-//		final String branches = HttpAuthentication.getMIDBranches();
-//
-//		return JsonReader.readAsJsonArray(branches);
-//
-//	}
-//
-//	private void updatePolMtrVeh(final String content) {
-//
-//		final String polNo;
-//
-//		final Integer renCnt;
-//
-//		final Integer endtCnt;
-//
-//		final String vehRegNo;
-//
-//		final String referenceNumber;
-//
-//		String stickerNumber;
-//
-//		final String refExp = "$.motor_policy.reference";
-//		final String stickerExp = "$.motor_policy.sticker_number";
-//		final String vehRegNumberExp = "$.motor_policy.vehicle_registration";
-//		referenceNumber = JsonPath.parse(content).read(refExp);
-//		stickerNumber = JsonPath.parse(content).read(stickerExp);
-//		if (!(stickerNumber == null)) {
-//			final Matcher matcher = Pattern.compile("\\d+").matcher(stickerNumber);
-//			matcher.find();
-//			final Long i = Long.valueOf(matcher.group());
-//			stickerNumber = i.toString();
-//			polNo = referenceNumber.substring(0, 16);
-//
-//			renCnt = Integer.parseInt(referenceNumber.substring(16, 17));
-//
-//			endtCnt = Integer.parseInt(referenceNumber.substring(17, 18));
-//
-//			vehRegNo = JsonPath.parse(content).read(vehRegNumberExp);
-//			;
-//			getReadyForDataUpdate();
-//			final PolMtrVeh polMtrVeh = dbCommandExecutor.executeCommand(() -> {
-//				return polMtrVehRepository.findPolMtrVehicleRecordByCompositeKey(polNo, renCnt, endtCnt, vehRegNo);
-//			});
-//
-//			if (polMtrVeh != null) {
-//				polMtrVeh.setOwnName(stickerNumber);
-//
-//				dbCommandExecutor.executeCommand(() -> {
-//
-//					polMtrVehRepository.update(polMtrVeh);
-//					return null;
-//				});
-//			}
-//		}
-//	}
-//
-//	public synchronized void prepareDataFlow() {
-//
-//		emf = Persistence.createEntityManagerFactory("midPU");
-//		em = emf.createEntityManager();
-//		dbCommandExecutor = new DbCommandExecutor(em);
-//		xmm600Repository = new Xmm600Repository();
-//		xmm600Repository.em = em;
-//		xmm600Repository.setDbCommandExecutor(dbCommandExecutor);
-//
-//		polMasterRepository = new PolMasterRepository();
-//		polMasterRepository.em = em;
-//		polMasterRepository.setDbCommandExecutor(dbCommandExecutor);
-//
-//		polFeesRepository = new PolFeesRepository();
-//		polFeesRepository.em = em;
-//		polFeesRepository.setDbCommandExecutor(dbCommandExecutor);
-//
-//		polRiskRepository = new PolRiskRepository();
-//		polRiskRepository.em = em;
-//		polRiskRepository.setDbCommandExecutor(dbCommandExecutor);
-//
-//		polItemRepository = new PolItemRepository();
-//		polItemRepository.em = em;
-//		polItemRepository.setDbCommandExecutor(dbCommandExecutor);
-//
-//		polMtrVehRepository = new PolMtrVehRepository();
-//		polMtrVehRepository.em = em;
-//		polMtrVehRepository.setDbCommandExecutor(dbCommandExecutor);
-//
-//		polItemBenRepository = new PolItemBenRepository();
-//		polItemBenRepository.em = em;
-//		polItemBenRepository.setDbCommandExecutor(dbCommandExecutor);
-//
-//		xmm106Repository = new Xmm106Repository();
-//		xmm106Repository.em = em;
-//		xmm106Repository.setDbCommandExecutor(dbCommandExecutor);
-//
-//		xmm023Repository = new Xmm023Repository();
-//		xmm023Repository.em = em;
-//		xmm023Repository.setDbCommandExecutor(dbCommandExecutor);
-//	}
-//
-//	public synchronized void getReadyForDataUpdate() {
-//
-//		emf = Persistence.createEntityManagerFactory("midUP");
-//		em = emf.createEntityManager();
-//		dbCommandExecutor = new DbCommandExecutor(em);
-//		polMtrVehRepository = new PolMtrVehRepository();
-//		polMtrVehRepository.em = em;
-//		polMtrVehRepository.setDbCommandExecutor(dbCommandExecutor);
-//
-//	}
-//
-//	public void findRecord() {
-//
-//		final List<PolMaster> polMasters = getPolicyMasterRecordsByFilter();
-//		model.setRowCount(0);
-//
-//		if (polMasters != null) {
-//
-//			for (final PolMaster polMaster : polMasters) {
-//
-//				skipPolicy = dbCommandExecutor.executeCommand(() -> {
-//					return polMasterRepository.isSkipPolicy(polMaster.getPolNo(), polMaster.getRenCnt());
-//				});
-//
-//				if (!skipPolicy) {
-//					List<PolMtrVeh> polMtrVehs;
-//
-//					if (vehRegRefField.getText().length() > 0) {
-//
-//						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-//							return polMtrVehRepository.findPolMtrVehicleByVehRegNo(polMaster.getPolNo(),
-//									polMaster.getRenCnt(), polMaster.getEndtCnt(), vehRegRefField.getText());
-//						});
-//					} else {
-//						polMtrVehs = dbCommandExecutor.executeCommand(() -> {
-//							return polMtrVehRepository.findPolMtrVehicleList(polMaster.getPolNo(),
-//									polMaster.getRenCnt(), polMaster.getEndtCnt());
-//						});
-//					}
-//
-//					for (final PolMtrVeh mtrVeh : polMtrVehs) {
-//
-//						final List<PolRisk> polRisks = dbCommandExecutor.executeCommand(() -> {
-//							return polRiskRepository.findPolRiskRecord(polMaster.getPolNo(), polMaster.getRenCnt(),
-//									polMaster.getEndtCnt(), mtrVeh.getRiskGrp(), mtrVeh.getRiskNo());
-//						});
-//
-//						for (final PolRisk polRisk : polRisks) {
-//
-//							final Object[] colRowVect = new Object[] { polMaster.getTranDate().toString(),
-//									polMaster.getPolNo(), mtrVeh.getCertRef(), polRisk.getComDate(),
-//									polRisk.getExpiryDate(),
-//									polMaster.getInsdName1() + polMaster.getInsdName2() + polMaster.getInsdName3(),
-//									mtrVeh.getCoverType(), mtrVeh.getVehRegNo(), mtrVeh.getVehMake(),
-//									mtrVeh.getModelDesc() };
-//							model.addRow(colRowVect);
-//
-//						}
-//
-//					}
-//
-//					// for (final PolMtrVeh mtrVeh : polMtrVehs) {
-//
-//					// final Object[] colRowVect = new Object[] {
-//					// polMaster.getTranDate().toString(),
-//					// polMaster.getPolNo(), mtrVeh.getOwnName(), polMaster.getComDate(),
-//					// polMaster.getExpiryDate(),
-//					// polMaster.getInsdName1() + polMaster.getInsdName2() +
-//					// polMaster.getInsdName3(),
-//					// mtrVeh.getCoverType(), mtrVeh.getVehRegNo(), mtrVeh.getVehMake(),
-//					// mtrVeh.getModelDesc() };
-//					// model.addRow(colRowVect);
-//					// }
-//				}
-//			}
-//			em.close();
-//			emf.close();
-//			importBtn.setEnabled(true);
-//
-//			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-//
-//		}
-//
-//	}
-//
-//	static class SelectAll extends TextAction {
-//		public SelectAll() {
-//			super("Select All");
-//			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control S"));
-//		}
-//
-//		@Override
-//		public void actionPerformed(final ActionEvent e) {
-//			JTextComponent component = getFocusedComponent();
-//			component.selectAll();
-//			component.requestFocusInWindow();
-//		}
-//	}
-//
-//}

@@ -2,167 +2,166 @@ package com.mid.app.vehicledata.model;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class VehicleData {
-	
-private String 	registrationNumber;
-private String    chassisNumber;
-private String    make;
-private String    model;
-private Integer    manufacturingYear;
-private Integer    registrationYear;
-private String    vehicleColour;
-private String   bodyType;
-private Integer    seatingCapacity;
-private Integer    cubicCapacity;
-private String    vehicleUsage;
-private String    fuelType;
-private BigDecimal    vehicleValue;
-private boolean    verified;
 
+	@JsonProperty("registrationNumber")
+	private String registrationNumber;
 
-public VehicleData() {
-	
-}
+	@JsonProperty("chassisNumber")
+	private String chassisNumber;
 
+	@JsonProperty("make")
+	private String make;
 
-public String getRegistrationNumber() {
-	return registrationNumber;
-}
+	@JsonProperty("model")
+	private String model;
 
+	@JsonProperty("manufacturingYear")
+	private Integer manufacturingYear;
 
-public void setRegistrationNumber(String registrationNumber) {
-	this.registrationNumber = registrationNumber;
-}
+	@JsonProperty("registrationYear")
+	private Integer registrationYear;
 
+	@JsonProperty("vehicleColour")
+	private String vehicleColour;
 
-public String getChassisNumber() {
-	return chassisNumber;
-}
+	@JsonProperty("bodyType")
+	private String bodyType;
 
+	@JsonProperty("seatingCapacity")
+	private Integer seatingCapacity;
 
-public void setChassisNumber(String chassisNumber) {
-	this.chassisNumber = chassisNumber;
-}
+	@JsonProperty("cubicCapacity")
+	private Integer cubicCapacity;
 
+	@JsonProperty("vehicleUsage")
+	private String vehicleUsage;
 
-public String getMake() {
-	return make;
-}
+	@JsonProperty("fuelType")
+	private String fuelType;
 
+	@JsonProperty("vehicleValue")
+	private BigDecimal vehicleValue;
 
-public void setMake(String make) {
-	this.make = make;
-}
+	@JsonProperty("verified")
+	private Boolean verified;
 
+	public VehicleData() {
 
-public String getModel() {
-	return model;
-}
+	}
 
+	public String getRegistrationNumber() {
+		return registrationNumber;
+	}
 
-public void setModel(String model) {
-	this.model = model;
-}
+	public void setRegistrationNumber(String registrationNumber) {
+		this.registrationNumber = registrationNumber;
+	}
 
+	public String getChassisNumber() {
+		return chassisNumber;
+	}
 
-public Integer getManufacturingYear() {
-	return manufacturingYear;
-}
+	public void setChassisNumber(String chassisNumber) {
+		this.chassisNumber = chassisNumber;
+	}
 
+	public String getMake() {
+		return make;
+	}
 
-public void setManufacturingYear(Integer manufacturingYear) {
-	this.manufacturingYear = manufacturingYear;
-}
+	public void setMake(String make) {
+		this.make = make;
+	}
 
+	public String getModel() {
+		return model;
+	}
 
-public Integer getRegistrationYear() {
-	return registrationYear;
-}
+	public void setModel(String model) {
+		this.model = model;
+	}
 
+	public Integer getManufacturingYear() {
+		return manufacturingYear;
+	}
 
-public void setRegistrationYear(Integer registrationYear) {
-	this.registrationYear = registrationYear;
-}
+	public void setManufacturingYear(Integer manufacturingYear) {
+		this.manufacturingYear = manufacturingYear;
+	}
 
+	public Integer getRegistrationYear() {
+		return registrationYear;
+	}
 
-public String getVehicleColour() {
-	return vehicleColour;
-}
+	public void setRegistrationYear(Integer registrationYear) {
+		this.registrationYear = registrationYear;
+	}
 
+	public String getVehicleColour() {
+		return vehicleColour;
+	}
 
-public void setVehicleColour(String vehicleColour) {
-	this.vehicleColour = vehicleColour;
-}
+	public void setVehicleColour(String vehicleColour) {
+		this.vehicleColour = vehicleColour;
+	}
 
+	public String getBodyType() {
+		return bodyType;
+	}
 
-public String getBodyType() {
-	return bodyType;
-}
+	public void setBodyType(String bodyType) {
+		this.bodyType = bodyType;
+	}
 
+	public Integer getSeatingCapacity() {
+		return seatingCapacity;
+	}
 
-public void setBodyType(String bodyType) {
-	this.bodyType = bodyType;
-}
+	public void setSeatingCapacity(Integer seatingCapacity) {
+		this.seatingCapacity = seatingCapacity;
+	}
 
+	public Integer getCubicCapacity() {
+		return cubicCapacity;
+	}
 
-public Integer getSeatingCapacity() {
-	return seatingCapacity;
-}
+	public void setCubicCapacity(Integer cubicCapacity) {
+		this.cubicCapacity = cubicCapacity;
+	}
 
+	public String getVehicleUsage() {
+		return vehicleUsage;
+	}
 
-public void setSeatingCapacity(Integer seatingCapacity) {
-	this.seatingCapacity = seatingCapacity;
-}
+	public void setVehicleUsage(String vehicleUsage) {
+		this.vehicleUsage = vehicleUsage;
+	}
 
+	public String getFuelType() {
+		return fuelType;
+	}
 
-public Integer getCubicCapacity() {
-	return cubicCapacity;
-}
+	public void setFuelType(String fuelType) {
+		this.fuelType = fuelType;
+	}
 
+	public BigDecimal getVehicleValue() {
+		return vehicleValue;
+	}
 
-public void setCubicCapacity(Integer cubicCapacity) {
-	this.cubicCapacity = cubicCapacity;
-}
+	public void setVehicleValue(BigDecimal vehicleValue) {
+		this.vehicleValue = vehicleValue;
+	}
 
+	public boolean isVerified() {
+		return verified;
+	}
 
-public String getVehicleUsage() {
-	return vehicleUsage;
-}
-
-
-public void setVehicleUsage(String vehicleUsage) {
-	this.vehicleUsage = vehicleUsage;
-}
-
-
-public String getFuelType() {
-	return fuelType;
-}
-
-
-public void setFuelType(String fuelType) {
-	this.fuelType = fuelType;
-}
-
-
-public BigDecimal getVehicleValue() {
-	return vehicleValue;
-}
-
-
-public void setVehicleValue(BigDecimal vehicleValue) {
-	this.vehicleValue = vehicleValue;
-}
-
-
-public boolean isVerified() {
-	return verified;
-}
-
-
-public void setVerified(boolean verified) {
-	this.verified = verified;
-}
-
+	public void setVerified(boolean verified) {
+		this.verified = verified;
+	}
 
 }

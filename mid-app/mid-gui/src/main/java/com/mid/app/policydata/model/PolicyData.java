@@ -3,17 +3,39 @@ package com.mid.app.policydata.model;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class PolicyData {
 	
+	
+	@JsonProperty("startDate")
 	private Date startDate;
+	
+	@JsonProperty("expiryDate")
     private Date expiryDate;
+	
+	@JsonProperty("sumInsured")
     private BigDecimal sumInsured;
+	
+	@JsonProperty("grossPremium")
     private BigDecimal grossPremium;
+	
+	@JsonProperty("type")
     private String type; // Can be: NEW_BUSINESS, RENEWAL, ENDORSEMENT, CANCELLATION
+	
+	@JsonProperty("transactionDate")
     private Date transactionDate;
+	
+	@JsonProperty("excessBought")
     private boolean excessBought;
+	
+	@JsonProperty("noClaimDiscount")
     private int noClaimDiscount; // Percentage (0-100)
+	
+	@JsonProperty("earnedNoClaimDiscount")
     private int earnedNoClaimDiscount; // Percentage (0-100)
+	
+	@JsonProperty("calculationType")
     private String calculationType; // Can be: FULL_YEAR, SHORT_RATE, PRO_
     
     

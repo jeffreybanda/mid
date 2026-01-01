@@ -20,3 +20,33 @@ INFO:MainFrame created successfully.
 INFO:MainFrame created successfully.
 11:19:56 24/12/2025
 INFO:MainFrame created successfully.
+15:55:57 24/12/2025
+INFO:MainFrame created successfully.
+16:07:26 24/12/2025
+INFO:MainFrame created successfully.
+16:30:01 24/12/2025
+INFO:MainFrame created successfully.
+16:36:18 24/12/2025
+INFO:MainFrame created successfully.
+18:01:44 24/12/2025
+INFO:MainFrame created successfully.
+18:11:36 24/12/2025
+INFO:MainFrame created successfully.
+18:14:34 24/12/2025
+INFO:MainFrame created successfully.
+18:18:01 24/12/2025
+INFO:MainFrame created successfully.
+18:25:59 24/12/2025
+INFO:MainFrame created successfully.
+18:28:55 24/12/2025
+INFO:Failed to import policy TMPCHT0001192506: {"status":400,"message":"Invalid request data","meta":"\"value\" is required","httpStatusCode":400}
+18:38:55 24/12/2025
+INFO:MainFrame created successfully.
+18:39:49 24/12/2025
+INFO:Failed to import policy TMPCHT0001192506: {"status":404,"message":"Intermediary with ID D000001 not found","httpStatusCode":404}
+18:40:01 24/12/2025
+INFO:Failed to import policy TMPCHT0001192506: {"status":404,"message":"Intermediary with ID D000001 not found","httpStatusCode":404}
+18:56:40 24/12/2025
+INFO:MainFrame created successfully.
+18:59:32 24/12/2025
+INFO:Failed to import policy AMPTHA0036172500: {"status":404,"message":"Intermediary with ID AGH0125 not found","httpStatusCode":404}

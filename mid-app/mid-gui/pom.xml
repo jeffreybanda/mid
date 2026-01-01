@@ -44,14 +44,13 @@
 	</build>
 
 
-
 	<dependencies>
-	
-	<dependency>
-    <groupId>org.json</groupId>
-    <artifactId>json</artifactId>
-    <version>20211205</version>
-</dependency>
+
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20211205</version>
+		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.jayway.jsonpath/json-path -->
 		<dependency>
@@ -60,9 +59,17 @@
 			<version>2.4.0</version>
 		</dependency>
 
+		<!--
+		https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>3.0-rc5</version>
+		</dependency>
 
 
-		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
@@ -76,14 +83,12 @@
 		</dependency>
 
 
-
 		<dependency>
 			<groupId>com.toedter</groupId>
 			<artifactId>jcalendar</artifactId>
 			<version>1.4</version>
 		</dependency>
 
-	
 
 		<dependency>
 			<groupId>com.mid</groupId>

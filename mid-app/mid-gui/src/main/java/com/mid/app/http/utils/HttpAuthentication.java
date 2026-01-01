@@ -19,6 +19,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -72,48 +73,47 @@ public class HttpAuthentication {
 
 	public static CloseableHttpResponse getPostPolicyToPortalResponse(final String json) {
 
-		try {
-			final InputStream is = CloseableHttpResponse.class.getResourceAsStream(System.getProperty("PropFile"));
+	    try {
+	        final InputStream is =
+	                CloseableHttpResponse.class.getResourceAsStream(System.getProperty("PropFile"));
 
-			final Properties prop = new Properties();
-			prop.load(is);
+	        final Properties prop = new Properties();
+	        prop.load(is);
 
-			String baseUrl = prop.getProperty("url.base");
-			String postIndividualPolicyPath = prop.getProperty("url.PostIndividualPolicy");
-			String apiKey = prop.getProperty("url.ApiKey");
+	        String baseUrl = prop.getProperty("url.base");
+	        String postIndividualPolicyPath = prop.getProperty("url.PostIndividualPolicy");
+	        String apiKey = prop.getProperty("url.ApiKey");
 
-			prop.load(is);
+	        final CloseableHttpClient client = HttpClients.createDefault();
+	        String apiUrl = baseUrl + postIndividualPolicyPath;
 
-			final CloseableHttpClient client = HttpClients.createDefault();
-			String apiUrl = baseUrl + postIndividualPolicyPath;
+	        HttpPost httpPost = new HttpPost(apiUrl);
 
-			// DEBUG: Print what we're sending
+	        // Headers
+	        httpPost.setHeader("Accept", "application/json");
+	        httpPost.setHeader("Content-Type", "application/json");
+	        httpPost.setHeader("Authorization", "x-api-key " + apiKey);
 
-			final HttpPost httpPost = new HttpPost(apiUrl.toString());
+	      
+	        StringEntity entity = new StringEntity(json, ContentType.APPLICATION_JSON);
+	        httpPost.setEntity(entity);
 
-			// Set headers - choose ONE of these options based on your API docs
-			httpPost.setHeader("Accept", "application/json");
-			httpPost.setHeader("Content-type", "application/json");
+	        // Debug (strongly recommended)
+	        System.out.println("POST URL: " + apiUrl);
+	        System.out.println("REQUEST BODY: " + json);
 
-			// Use this exact format:
-			httpPost.setHeader("Authorization", "x-api-key " + apiKey);
+	        // SSL (dev only)
+	        SSLUtilities.trustAllHostnames();
+	        SSLUtilities.trustAllHttpsCertificates();
 
-			// SSL setup
-			SSLUtilities.trustAllHostnames();
-			SSLUtilities.trustAllHttpsCertificates();
+	        return client.execute(httpPost);
 
-			return client.execute(httpPost);
-
-		} catch (final UnknownHostException e) {
-			JOptionPane.showMessageDialog(null, "Failed to Post Policy");
-			e.printStackTrace();
-			return null;
-		} catch (final IOException e) {
-			JOptionPane.showMessageDialog(null, "Error! Contact Your Admin");
-			e.printStackTrace();
-			return null;
-		}
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return null;
+	    }
 	}
+
 
 	public static CloseableHttpResponse getPostBranchToPortalResponse(final String json) {
 

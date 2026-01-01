@@ -1,0 +1,22 @@
+19:18:56 01/01/2026
+INFO:MainFrame created successfully.
+19:21:17 01/01/2026
+INFO:MainFrame created successfully.
+19:23:36 01/01/2026
+INFO:MainFrame created successfully.
+19:24:44 01/01/2026
+INFO:MainFrame created successfully.
+19:26:46 01/01/2026
+INFO:MainFrame created successfully.
+21:04:49 01/01/2026
+INFO:MainFrame created successfully.
+21:13:17 01/01/2026
+INFO:Search failed: Unable to create requested service [org.hibernate.engine.jdbc.env.spi.JdbcEnvironment]
+21:16:41 01/01/2026
+INFO:MainFrame created successfully.
+21:23:01 01/01/2026
+INFO:Failed to import policy AMPTHA0023002200: {"message":"Invalid request data","meta":"\"vehicleData.chassisNumber\" length must be less than or equal to 17 characters long","httpStatusCode":400}
+21:25:33 01/01/2026
+INFO:Failed to import policy AMPTHA0023002200: {"message":"Invalid request data","meta":"\"vehicleData.chassisNumber\" length must be less than or equal to 17 characters long","httpStatusCode":400}
+21:34:24 01/01/2026
+INFO:Failed to import policy TMPTAM0001632500: {"message":"Invalid request data","meta":"\"vehicleData.cubicCapacity\" must be a positive number","httpStatusCode":400}

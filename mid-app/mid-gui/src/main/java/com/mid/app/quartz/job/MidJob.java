@@ -1,29 +1,44 @@
+// File: com/mid/app/quartz/job/MidJob.java (simplified and correct)
 package com.mid.app.quartz.job;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-
-import org.apache.http.auth.AuthenticationException;
+import com.mid.app.service.ScheduledPolicyService;
+import com.mid.app.swing.model.ImportResult;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import com.mid.app.tasks.MidTask;
+import java.time.LocalDateTime;
 
 public class MidJob implements Job {
 
-	public void execute(final JobExecutionContext context) throws JobExecutionException {
-		final LocalDateTime localTime = LocalDateTime.now();
-		System.out.println("Run QuartzJob at " + localTime.toString());
-
-		final MidTask midTask = new MidTask();
-		try {
-			midTask.perform();
-		} catch (AuthenticationException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
-
+    @Override
+    public void execute(JobExecutionContext context) throws JobExecutionException {
+        LocalDateTime startTime = LocalDateTime.now();
+        System.out.println("[QUARTZ JOB] Started at " + startTime);
+        
+        try {
+            ScheduledPolicyService service = new ScheduledPolicyService();
+            ImportResult result = service.processCurrentDatePolicies();
+            
+            LocalDateTime endTime = LocalDateTime.now();
+            long durationSeconds = java.time.Duration.between(startTime, endTime).getSeconds();
+            
+            System.out.println("[QUARTZ JOB] " + result.getMessage());
+            System.out.println("[QUARTZ JOB] Duration: " + durationSeconds + " seconds");
+            
+            // Note: Cleanup is now handled separately by TrackingCleanupJob
+            // OR it's done automatically in ScheduledPolicyService constructor
+            
+            if (!result.isSuccess()) {
+                throw new JobExecutionException("Scheduled job failed: " + result.getMessage());
+            }
+            
+        } catch (Exception e) {
+            System.err.println("[QUARTZ JOB ERROR] " + e.getMessage());
+            e.printStackTrace();
+            throw new JobExecutionException(e);
+        }
+        
+        System.out.println("[QUARTZ JOB] Completed at " + LocalDateTime.now());
+    }
 }

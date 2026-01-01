@@ -2,22 +2,51 @@ package com.mid.app.customerdata.model;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class CustomerData {
 	
-	private boolean isActive;
-    private String type;
-    private String title;
-    private String firstName;
-    private String lastName;
-    private String gender;
-    private Date dateOfBirth;
-    private String nationality; 
-    private String ghanaCardNumber;
-    private String email;
-    private String phoneNumber;
-    private String digitalAddress;
-    private String residentialAddress;
-    private String occupation;
+	 @JsonProperty("isActive")
+     private Boolean isActive;
+     
+     @JsonProperty("type")
+     private String type;
+     
+     @JsonProperty("title")
+     private String title;
+     
+     @JsonProperty("firstName")
+     private String firstName;
+     
+     @JsonProperty("lastName")
+     private String lastName;
+     
+     @JsonProperty("gender")
+     private String gender;
+     
+     @JsonProperty("dateOfBirth")
+     private String dateOfBirth;
+     
+     @JsonProperty("nationality")
+     private String nationality;
+     
+     @JsonProperty("ghanaCardNumber")
+     private String ghanaCardNumber;
+     
+     @JsonProperty("email")
+     private String email;
+     
+     @JsonProperty("phoneNumber")
+     private String phoneNumber;
+     
+     @JsonProperty("digitalAddress")
+     private String digitalAddress;
+     
+     @JsonProperty("residentialAddress")
+     private String residentialAddress;
+     
+     @JsonProperty("occupation")
+     private String occupation;
     
     
     public CustomerData() {
@@ -85,12 +114,24 @@ public class CustomerData {
 	}
 
 
-	public Date getDateOfBirth() {
+	
+
+	public Boolean getIsActive() {
+		return isActive;
+	}
+
+
+	public void setIsActive(Boolean isActive) {
+		this.isActive = isActive;
+	}
+
+
+	public String getDateOfBirth() {
 		return dateOfBirth;
 	}
 
 
-	public void setDateOfBirth(Date dateOfBirth) {
+	public void setDateOfBirth(String dateOfBirth) {
 		this.dateOfBirth = dateOfBirth;
 	}
 
