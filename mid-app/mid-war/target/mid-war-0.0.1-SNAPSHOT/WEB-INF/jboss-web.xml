@@ -1,4 +1,0 @@
-<jboss-web>
- 
-   <context-root>/mid-war</context-root>
-</jboss-web>

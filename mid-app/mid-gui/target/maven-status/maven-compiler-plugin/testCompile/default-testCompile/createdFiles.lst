@@ -1,2 +1,2 @@
-com\mid\app\http\utils\TestHttp.class
-com\mid\app\http\utils\TrustAllX509TrustManager.class
+com/mid/app/http/utils/TrustAllX509TrustManager.class
+com/mid/app/http/utils/TestHttp.class

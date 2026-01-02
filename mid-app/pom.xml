@@ -207,6 +207,6 @@
 		<module>mid-resource</module>
 		<module>mid-gui</module>
 		<module>mid-intergration</module>
-		<module>mid-war</module>
+		
 	</modules>
 </project>

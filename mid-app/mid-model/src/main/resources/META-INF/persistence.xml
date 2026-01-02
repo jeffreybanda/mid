@@ -22,7 +22,7 @@
 			<property name="hibernate.connection.driver_class"
 				value="com.ddtek.jdbc.openedge.OpenEdgeDriver" />
 					<property name="hibernate.connection.url"
-			value="jdbc:datadirect:openedge://192.168.1.172:40500;databaseName=pst" />
+			value="jdbc:datadirect:openedge://192.168.1.6:10600;databaseName=pst" />
 			<property name="hibernate.connection.username"
 				value="sysprogress" />
 			<property name="hibernate.connection.password"

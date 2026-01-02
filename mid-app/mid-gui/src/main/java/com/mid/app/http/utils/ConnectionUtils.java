@@ -154,8 +154,8 @@ public class ConnectionUtils {
 
 	    
 	        // SSL setup
-	        SSLUtilities.trustAllHostnames();
-	        SSLUtilities.trustAllHttpsCertificates();
+//	        SSLUtilities.trustAllHostnames();
+//	        SSLUtilities.trustAllHttpsCertificates();
 	        
 	        final CloseableHttpResponse response = client.execute(httpGet);
 	        
@@ -225,8 +225,8 @@ public class ConnectionUtils {
 			httpGet.setHeader("token", token);
 			httpGet.setHeader("Accept", "*/*");
 			httpGet.setHeader("Content-type", "application/json");
-			SSLUtilities.trustAllHostnames();
-			SSLUtilities.trustAllHttpsCertificates();
+//			SSLUtilities.trustAllHostnames();
+//			SSLUtilities.trustAllHttpsCertificates();
 
 			final CloseableHttpResponse response = client.execute(httpGet);
 			final HttpEntity body = response.getEntity();

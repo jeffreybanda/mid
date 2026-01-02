@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.0"
+	xmlns="http://java.sun.com/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+
+<persistence-unit name="midPU"
+		transaction-type="RESOURCE_LOCAL">
+		<provider>org.hibernate.ejb.HibernatePersistence</provider>
+		<class>com.mid.app.acctmaster.model.AcctMaster</class>
+		<class>com.mid.app.polmaster.model.PolMaster</class>
+		<class>com.mid.app.polmtrveh.model.PolMtrVeh</class>
+		<class>com.mid.app.polrisk.model.PolRisk</class>
+		<class>com.mid.app.politem.model.PolItem</class>
+		<class>com.mid.app.xmm600.model.Xmm600</class>
+		<class>com.mid.app.xmm106.model.Xmm106</class>
+		<class>com.mid.app.politemben.model.PolItemBen</class>
+		<properties>
+			<property name="hibernate.show_sql" value="false" />
+			<property name="hibernate.format_sql" value="true" />
+			<property name="use_sql_comments" value="true" />
+			<property name="hibernate.connection.driver_class"
+				value="com.ddtek.jdbc.openedge.OpenEdgeDriver" />
+					<property name="hibernate.connection.url"
+			value="jdbc:datadirect:openedge://192.168.1.6:10600;databaseName=pst" />
+			<property name="hibernate.connection.username"
+				value="sysprogress" />
+			<property name="hibernate.connection.password"
+				value="password" />
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.SQLServerDialect" />
+			<property name="hibernate.id.new_generator_mappings"
+				value="true" />
+				<property name="hibernate.connection.isolation" value ="1"/>
+		</properties>
+	</persistence-unit>
+	
+	<persistence-unit name="midUP"
+		transaction-type="RESOURCE_LOCAL">
+		<provider>org.hibernate.ejb.HibernatePersistence</provider>
+		<class>com.mid.app.polmaster.model.PolMaster</class>
+		<class>com.mid.app.polmtrveh.model.PolMtrVeh</class>
+		<class>com.mid.app.polrisk.model.PolRisk</class>
+		<class>com.mid.app.xmm600.model.Xmm600</class>
+		<class>com.mid.app.xmm023.model.Xmm023</class>
+		<class>com.mid.app.xmm106.model.Xmm106</class>
+		<class>com.mid.app.politemben.model.PolItemBen</class>
+		<properties>
+			<property name="hibernate.show_sql" value="false" />
+			<property name="hibernate.format_sql" value="true" />
+			<property name="use_sql_comments" value="true" />
+			<property name="hibernate.connection.driver_class"
+				value="com.ddtek.jdbc.openedge.OpenEdgeDriver" />
+				<property name="hibernate.connection.url"
+	value="jdbc:datadirect:openedge://192.168.1.9:10600;databaseName=pst" />
+			<property name="hibernate.connection.username"
+				value="sysprogress" />
+			<property name="hibernate.connection.password"
+				value="password" />
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.SQLServerDialect" />
+			<property name="hibernate.id.new_generator_mappings"
+				value="true" />
+				
+		</properties>
+	</persistence-unit>
+	
+
+</persistence>

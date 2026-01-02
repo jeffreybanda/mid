@@ -154,6 +154,8 @@ public class PolicyImportService {
         
         CloseableHttpResponse response = null;
         try {
+        	System.out.println(" importing policy: " + json);
+        	
             response = HttpAuthentication.getPostPolicyToPortalResponse(json);
             HttpEntity body = response.getEntity();
             StatusLine statusLine = response.getStatusLine();
