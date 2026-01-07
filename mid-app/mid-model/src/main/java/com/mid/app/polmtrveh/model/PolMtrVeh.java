@@ -45,6 +45,8 @@ public class PolMtrVeh implements Serializable {
 	private Integer engineCC;
 
 	private BigDecimal tPPrem;
+	
+	private BigDecimal ncbPct = BigDecimal.ZERO;
 
 	private Integer noSeats;
 
@@ -274,6 +276,16 @@ public class PolMtrVeh implements Serializable {
 
 	public void setRegMth(Integer regMth) {
 		this.regMth = regMth;
+	}
+	
+	
+
+	public BigDecimal getNcbPct() {
+		return ncbPct;
+	}
+
+	public void setNcbPct(BigDecimal ncbPct) {
+		this.ncbPct = ncbPct;
 	}
 
 	@Override

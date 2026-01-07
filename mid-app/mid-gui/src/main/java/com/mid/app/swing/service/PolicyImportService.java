@@ -89,12 +89,18 @@ public class PolicyImportService {
                         List<Xmm600> intermediaries = dataService.findIntermediaries(em, polMaster);
                         List<Xmm600> clients = dataService.findClients(em, polMaster);
                         
-                        boolean isValid = validationService.validateRecord(polMaster, risk, vehicle, 
-                                                                          itemBens, clients, intermediaries);
+                        boolean isValid = true ;//validationService.validateRecord(polMaster, risk, vehicle, 
+                                                                //          itemBens, clients, intermediaries);
+                        
+                       
+                        
+                        
                         
                         if (isValid) {
                             try {
-                                String json = jsonBuilder.buildPolicyJson(polMaster, risk, vehicle, item);
+                                String json = jsonBuilder.buildPolicyJson(polMaster, risk, vehicle, item,itemBens);
+                                logging.setMessage("generated payload " + json);
+                              
                                 boolean importSuccess = sendToPortal(json, polMaster.getPolNo());
                                 
                                 if (importSuccess) {

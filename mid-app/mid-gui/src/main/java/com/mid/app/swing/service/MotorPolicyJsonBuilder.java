@@ -1,10 +1,12 @@
 package com.mid.app.swing.service;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.mid.app.politem.model.PolItem;
+import com.mid.app.politemben.model.PolItemBen;
 import com.mid.app.polmaster.model.PolMaster;
 import com.mid.app.polmtrveh.model.PolMtrVeh;
 import com.mid.app.polrisk.model.PolRisk;
@@ -20,6 +22,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -29,7 +32,7 @@ public class MotorPolicyJsonBuilder {
 	private static final DateTimeFormatter INPUT_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S");
 
 	private final Properties scheduleProperties;
-	private final Gson gson;
+	private Gson gson;
 
 	public MotorPolicyJsonBuilder() {
 		this.gson = new Gson();
@@ -48,38 +51,20 @@ public class MotorPolicyJsonBuilder {
 		return props;
 	}
 
-	public String buildPolicyJson(PolMaster polMaster, PolRisk polRisk, PolMtrVeh polMtrVeh, PolItem polItem) {
+	public String buildPolicyJson(PolMaster polMaster, PolRisk polRisk, PolMtrVeh polMtrVeh, PolItem polItem,
+			List<PolItemBen> itemBens) {
 
 		JsonObject root = new JsonObject();
 		JsonObject data = new JsonObject();
 
-//      "branchCode": "TAM",
-//      "intermediaryCode": null,
-//      "subIntermediaryCode": null,
-//      "currencyCode": "USD",
-//      "isActive": true,
-//      "isFleet": false,
-//      "fleetSize": 1,
-//      "fleetDiscount": 0.0,
-//      "grossPremium": 87.87,
-//      "notes": null,
-//      "startDate": "2025-12-24",
-//      "expiryDate": "2026-01-24",
-//      "transactionDate": "2025-12-24",
-//      "paymentDate": "1900-01-01",
-//      "paymentMode": "unknown",
-//      "specialTerms": null,
-//      "umbrellaLimit": 0.0,
-//      "companyAssignedPolicyNumber": "OKO3A4084273",
-//      
-
+		System.out.println("Basic policy data");
 		// Basic policy data
 		data.addProperty("branchCode", polMaster.getBranch());
 
 		data.addProperty("intermediaryCode", polMaster.getAcctNo1());
+		// data.add("intermediaryCode", null);
 
 		addPropertyIfNotEmpty(data, "subIntermediaryCode", null);
-
 		data.addProperty("currencyCode", polMaster.getBillCurr());
 		data.addProperty("isActive", true);
 		data.addProperty("isFleet", false);
@@ -89,22 +74,25 @@ public class MotorPolicyJsonBuilder {
 		BigDecimal grossPremium = polRisk.getTotGap().divide(polMaster.getBillCurrRate(), 2, RoundingMode.HALF_UP);
 
 		data.addProperty("grossPremium", grossPremium.add(getStickerFee()));
-		data.add("notes", null);
+
+		addPropertyIfNotEmpty(data, "notes", null);
+		// data.add("notes", null);
 
 		data.addProperty("startDate", convertToMIDDate(polMaster.getComDate().toString()));
 		data.addProperty("expiryDate", convertToMIDDate(polMaster.getExpiryDate().toString()));
 
 		data.addProperty("transactionDate", convertToMIDDate(polMaster.getTranDate().toString()));
 		data.addProperty("paymentDate", convertToMIDDate(polMaster.getTranDate().toString()));
-		data.add("paymentMode", null);
-		data.add("specialTerms", null);
+
+		addPropertyIfNotEmpty(data, "paymentMode", null);
+		// data.add("paymentMode", null);
+		addPropertyIfNotEmpty(data, "specialTerms", null);
+		// data.add("specialTerms", null);
 		data.addProperty("umbrellaLimit", BigDecimal.ZERO);
 
 		data.addProperty("companyAssignedPolicyNumber", polMaster.getPolNo());
 
-		// Vehicle data
-//        JsonObject vehicleData = createVehicleData(polMtrVeh, polItem);
-//        data.add("vehicleData", vehicleData);
+		System.out.println(" Finished Basic policy data");
 
 		// Customer data
 		Xmm600 client = null;
@@ -130,19 +118,27 @@ public class MotorPolicyJsonBuilder {
 				emf.close();
 			}
 		}
-
+		System.out.println("  Basic customer data");
 		JsonObject customerData = createCustomerData(polMaster, client);
 		data.add("customerData", customerData);
-
+		System.out.println(" Finished customer data");
 		// Policy data
 //        JsonObject policyData = createPolicyData(polMaster, polRisk, polItem);
 //        data.add("policyData", policyData);
 //        
 
-		JsonArray vehicles = createVehicles(polMaster, polRisk, polItem, polMtrVeh);
+		System.out.println(" Create Vehicles");
+		JsonArray vehicles = createVehicles(polMaster, polRisk, polItem, polMtrVeh, itemBens);
 		data.add("vehicles", vehicles);
+		System.out.println(" Finished Vehicles");
+
+		System.out.println(" Finished Basic policy data");
 
 		root.add("data", data);
+
+		System.out.println("root" + root);
+		gson = new GsonBuilder().serializeNulls().create();
+
 		return gson.toJson(root);
 	}
 
@@ -180,26 +176,45 @@ public class MotorPolicyJsonBuilder {
 
 		customerData.addProperty("isActive", true);
 
-		if (getGender(xmm600).isEmpty() || getGender(xmm600) == null) {
-			customerData.addProperty("type", "CORPORATE");
-		} else {
-			customerData.addProperty("type", "INDIVIDUAL");
-		}
-		// customerData.addProperty("title", getTitle(xmm600));
-
-		addPropertyIfNotEmpty(customerData, "title", xmm600 != null ? xmm600.getTitleName() : null);
-		customerData.addProperty("firstName", resolveFirstName(polMaster));
-		customerData.add("otherNames", null);
-		customerData.addProperty("lastName", polMaster.getInsdName1());
-		customerData.addProperty("gender", getGender(xmm600));
-		customerData.addProperty("dateOfBirth",
-				convertToMIDDate(xmm600 != null ? xmm600.getBirthday().toString() : null));
-		customerData.addProperty("nationality", "GH");
-		customerData.addProperty("ghanaCardNumber", xmm600.getIcno());
+		String gender = getGender(xmm600);
 
 		String emailValue = xmm600 != null && xmm600.getEmail() != null && !xmm600.getEmail().isEmpty()
 				? xmm600.getEmail()
 				: null;
+
+		if (gender == null || gender.isEmpty()) {
+			customerData.addProperty("type", "CORPORATE");
+			customerData.addProperty("companyName", polMaster.getInsdName1());
+			customerData.addProperty("tinNumber", xmm600.getIcno());
+			customerData.addProperty("registeredAddress", xmm600.getAddr1());
+			// customerData.addProperty "businessSector": null,
+			addPropertyIfNotEmpty(customerData, "businessSector", null);
+			customerData.addProperty("companySize", 5);
+			customerData.addProperty("yearEstablished", 1988);
+			customerData.addProperty("contactPerson", xmm600.getName1());
+			addPropertyIfNotEmpty(customerData, "contactPersonPhone", xmm600 != null ? xmm600.getTelno7() : null);
+			customerData.addProperty("contactPersonEmail", emailValue);
+		} else {
+			customerData.addProperty("type", "INDIVIDUAL");
+			addPropertyIfNotEmpty(customerData, "title", xmm600 != null ? xmm600.getTitleName() : null);
+			customerData.addProperty("firstName", resolveFirstName(polMaster));
+			addPropertyIfNotEmpty(customerData, "otherNames", null);
+			// customerData.add("otherNames", null);
+			customerData.addProperty("lastName", polMaster.getInsdName1());
+			customerData.addProperty("gender", getGender(xmm600));
+			customerData.addProperty("dateOfBirth",
+					convertToMIDDate(xmm600 != null ? xmm600.getBirthday().toString() : null));
+			customerData.addProperty("nationality", "GH");
+			customerData.addProperty("ghanaCardNumber", xmm600.getIcno());
+
+			addPropertyIfNotEmpty(customerData, "levelOfEducation", null);
+			// customerData.add("levelOfEducation", null);
+			addPropertyIfNotEmpty(customerData, "maritalStatus", null);
+			// customerData.add("maritalStatus", null);
+		}
+
+		// customerData.addProperty("type", "INDIVIDUAL");
+		// customerData.addProperty("title", getTitle(xmm600));
 
 		if (emailValue != null) {
 			customerData.addProperty("email", emailValue);
@@ -220,9 +235,6 @@ public class MotorPolicyJsonBuilder {
 		} else {
 			customerData.add("occupation", JsonNull.INSTANCE);
 		}
-
-		customerData.add("levelOfEducation", null);
-		customerData.add("maritalStatus", null);
 
 		return customerData;
 	}
@@ -249,7 +261,8 @@ public class MotorPolicyJsonBuilder {
 		return policyData;
 	}
 
-	private JsonArray createVehicles(PolMaster polMaster, PolRisk polRisk, PolItem polItem, PolMtrVeh polMtrVeh) {
+	private JsonArray createVehicles(PolMaster polMaster, PolRisk polRisk, PolItem polItem, PolMtrVeh polMtrVeh,
+			List<PolItemBen> itemBens) {
 
 		JsonArray vehicles = new JsonArray();
 		JsonObject vehicle = new JsonObject();
@@ -271,8 +284,10 @@ public class MotorPolicyJsonBuilder {
 		addPropertyIfNotEmpty(vehicle, "fuelType", null);
 		vehicle.addProperty("vehicleUsage", polMtrVeh.getVehUsg());
 		vehicle.addProperty("seatingCapacity", polMtrVeh.getNoSeats());
-		vehicle.add("grossWeight", null);
-		vehicle.add("vehicleMileage", null);
+		addPropertyIfNotEmpty(vehicle, "grossWeight", null);
+		// vehicle.add("grossWeight", null);
+		addPropertyIfNotEmpty(vehicle, "vehicleMileage", null);
+		// vehicle.add("vehicleMileage", null);
 		vehicle.addProperty("vehicleValue", polItem.getuOM1Val());
 		vehicle.addProperty("cubicCapacity", polMtrVeh.getEngineCC());
 		vehicle.addProperty("partsAvailability", false);
@@ -301,8 +316,23 @@ public class MotorPolicyJsonBuilder {
 		vehicle.addProperty("extraTppdl", BigDecimal.ZERO);
 		vehicle.addProperty("fleetDiscount", BigDecimal.ZERO);
 		vehicle.addProperty("umbrellaLimit", BigDecimal.ZERO);
-		vehicle.addProperty("noClaimDiscount", BigDecimal.ZERO);
-		vehicle.addProperty("earnedNoClaimDiscount", BigDecimal.ZERO);
+
+		
+		Integer noClaimDiscount = 0;
+		BigDecimal earnedNoClaimDsicount = BigDecimal.ZERO;
+		for (PolItemBen itemBen : itemBens) {
+			
+			if(itemBen.getBenCode().equalsIgnoreCase("NCD") || itemBen.getBenCode().equalsIgnoreCase("NCB")) {
+				
+				noClaimDiscount = polMtrVeh.getNcbPct().intValue();
+				earnedNoClaimDsicount = itemBen.getPremDue();
+				
+			}
+
+		}
+
+		vehicle.addProperty("noClaimDiscount", noClaimDiscount);
+		vehicle.addProperty("earnedNoClaimDiscount", earnedNoClaimDsicount.abs());
 		vehicle.addProperty("calculationType", "FULL_YEAR");
 
 		vehicles.add(vehicle);

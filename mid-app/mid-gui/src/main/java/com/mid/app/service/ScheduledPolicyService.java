@@ -232,7 +232,7 @@ public class ScheduledPolicyService {
                     if (isValid) {
                         try {
                             // Build JSON
-                            String json = jsonBuilder.buildPolicyJson(polMaster, risk, vehicle, item);
+                            String json = jsonBuilder.buildPolicyJson(polMaster, risk, vehicle, item,itemBens);
                             
                             // Import to portal
                             boolean importSuccess = importService.sendToPortalScheduled(json, polMaster.getPolNo());
