@@ -1,0 +1,120 @@
+01:36:42 09/01/2026
+INFO:Failed to import policy TMPTKD0097222600: {"message":"Vehicle already has an active policy within the specified period","httpStatusCode":409}
+01:39:13 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:39:15 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:39:15 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:39:18 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:39:18 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:39:20 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:39:21 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:39:24 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:39:24 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:39:25 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:39:26 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:39:27 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:39:28 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:39:30 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:39:30 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:39:31 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:39:32 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:39:33 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:39:34 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:39:35 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:41:17 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Invalid request data","meta":"\"vehicles[0].fuelType\" is required","httpStatusCode":400}
+01:49:59 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:50:01 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:50:01 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:50:03 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:50:03 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:50:06 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:50:06 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:50:08 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:50:08 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:50:10 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:50:10 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:50:11 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:50:12 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:50:13 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:50:14 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:50:15 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:50:15 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:50:17 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:50:17 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:50:20 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:53:58 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:54:00 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:54:00 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:54:02 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:54:03 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:54:05 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:54:05 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:54:07 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:54:08 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:54:09 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:54:09 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:54:11 09/01/2026
+INFO:Failed to import policy CMPCGC0002622604: {"message":"Intermediary with ID GC00001 not found","httpStatusCode":404}
+01:54:11 09/01/2026
+INFO:Generated payload for policy: CMPCGC0002622604
+01:55:05 09/01/2026
+INFO:Generated payload for policy: TMPTKD0097222600
+01:55:07 09/01/2026
+INFO:Failed to import policy TMPTKD0097222600: {"message":"Vehicle already has an active policy within the specified period","httpStatusCode":409}
+01:59:08 09/01/2026
+INFO:Generated payload for policy: TMPTKD0097222600
+01:59:10 09/01/2026
+INFO:Failed to import policy TMPTKD0097222600: {"message":"Vehicle already has an active policy within the specified period","httpStatusCode":409}
+02:01:09 09/01/2026
+INFO:Failed to import policy TMPTKD0097222600: {"message":"Vehicle already has an active policy within the specified period","httpStatusCode":409}

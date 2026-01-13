@@ -332,7 +332,7 @@ public class MotorPolicyJsonBuilder {
 		}
 
 		vehicle.addProperty("noClaimDiscount", noClaimDiscount);
-		vehicle.addProperty("earnedNoClaimDiscount", earnedNoClaimDsicount.abs());
+		vehicle.addProperty("earnedNoClaimDiscount", noClaimDiscount);
 		vehicle.addProperty("calculationType", "FULL_YEAR");
 
 		vehicles.add(vehicle);

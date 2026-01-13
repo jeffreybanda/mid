@@ -1,0 +1,66 @@
+// ERROR: {"message":"Invalid request data","meta":"\"vehicles[0].fuelType\" is required","httpStatusCode":400}
+// POLICY: CMPCGC0002622604
+// TIMESTAMP: 20260109_014117
+{
+  "data": {
+    "branchCode": "GC",
+    "intermediaryCode": "AGO0007",
+    "currencyCode": "GHS",
+    "isActive": true,
+    "isFleet": false,
+    "fleetSize": 1,
+    "fleetDiscount": 0.0,
+    "grossPremium": 61017.17,
+    "startDate": "2026-01-03",
+    "expiryDate": "2027-01-02",
+    "transactionDate": "2026-01-05",
+    "paymentDate": "2026-01-05",
+    "umbrellaLimit": 0,
+    "companyAssignedPolicyNumber": "CMPCGC0002622604",
+    "customerData": {
+      "isActive": true,
+      "type": "CORPORATE",
+      "companyName": "OMNIBSIC GHANA LIMITED",
+      "tinNumber": "GHA-002403153-8",
+      "registeredAddress": "P.O.BOX KN 5569",
+      "companySize": 5,
+      "yearEstablished": 1988,
+      "contactPerson": "OMNIBSIC GHANA LIMITED",
+      "contactPersonPhone": "0501304205",
+      "contactPersonEmail": "INFO@OMNIBANK.COM.GH",
+      "email": "INFO@OMNIBANK.COM.GH",
+      "phoneNumber": "0501304205",
+      "residentialAddress": "P.O.BOX KN 5569"
+    },
+    "vehicles": [
+      {
+        "registrationNumber": "GT 38-23",
+        "make": "NI1",
+        "model": "NISSAN PATROL    .",
+        "manufacturingYear": 2023,
+        "registrationYear": 2023,
+        "chassisNumber": "JNITANY62Z0161199",
+        "vehicleColour": "BEIGE",
+        "bodyType": "S/WAGON",
+        "vehicleUsage": "1",
+        "seatingCapacity": 5,
+        "vehicleValue": 1149457.68,
+        "cubicCapacity": 5600,
+        "partsAvailability": false,
+        "verified": false,
+        "productCode": "MTCOMP",
+        "riskTypeCode": "PRIVATE_CORPORATE_X4",
+        "type": "NEW_BUSINESS",
+        "sumInsured": 1149457.68,
+        "grossPremium": 61017.17,
+        "excessBought": false,
+        "extraTppdl": 0,
+        "fleetDiscount": 0,
+        "umbrellaLimit": 0,
+        "noClaimDiscount": 0,
+        "earnedNoClaimDiscount": 0,
+        "calculationType": "FULL_YEAR"
+      }
+    ]
+  }
+}

@@ -1,5 +1,19 @@
 package com.mid.app.swing.service;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.StatusLine;
+import org.apache.http.auth.AuthenticationException;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.util.EntityUtils;
+
 import com.mid.app.common.model.HttpCode;
 import com.mid.app.http.utils.HttpAuthentication;
 import com.mid.app.politem.model.PolItem;
@@ -10,20 +24,6 @@ import com.mid.app.polrisk.model.PolRisk;
 import com.mid.app.swing.model.ImportCriteria;
 import com.mid.app.swing.model.ImportResult;
 import com.mid.app.utils.LoggingEngine;
-import com.mid.app.xmm600.model.Xmm600;
-import org.apache.http.HttpEntity;
-import org.apache.http.StatusLine;
-import org.apache.http.auth.AuthenticationException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.util.EntityUtils;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 
 public class PolicyImportService {
     
@@ -62,13 +62,15 @@ public class PolicyImportService {
             }
             
             for (PolMaster polMaster : polMasters) {
-                boolean skipPolicy = dataService.shouldSkipPolicy(em, polMaster.getPolNo(), polMaster.getRenCnt());
+                boolean skipPolicy = dataService.shouldSkipPolicy(em, 
+                    polMaster.getPolNo(), polMaster.getRenCnt());
                 
                 if (skipPolicy) {
                     continue;
                 }
                 
-                List<PolMtrVeh> vehicles = dataService.findVehicles(em, polMaster, criteria.getVehicleRegNo());
+                List<PolMtrVeh> vehicles = dataService.findVehicles(em, polMaster, 
+                    criteria.getVehicleRegNo());
                 
                 for (PolMtrVeh vehicle : vehicles) {
                     List<PolRisk> risks = dataService.findRisks(em, polMaster, vehicle);
@@ -76,74 +78,53 @@ public class PolicyImportService {
                     for (PolRisk risk : risks) {
                         PolItem item = dataService.findItem(em, polMaster, vehicle);
                         if (item == null) {
-                            // Log warning using LoggingEngine
                             if (logging != null) {
-                                logging.setMessage("No item found for policy " + polMaster.getPolNo());
-                               
+                                logging.setMessage("No item found for policy " + 
+                                    polMaster.getPolNo());
                             }
                             failureCount.incrementAndGet();
                             continue;
                         }
                         
-                        List<PolItemBen> itemBens = dataService.findItemBenefits(em, polMaster, vehicle);
-                        List<Xmm600> intermediaries = dataService.findIntermediaries(em, polMaster);
-                        List<Xmm600> clients = dataService.findClients(em, polMaster);
+                        List<PolItemBen> itemBens = dataService.findItemBenefits(em, 
+                            polMaster, vehicle);
                         
-                        boolean isValid = true ;//validationService.validateRecord(polMaster, risk, vehicle, 
-                                                                //          itemBens, clients, intermediaries);
+                        // Build JSON
+                        String json = jsonBuilder.buildPolicyJson(polMaster, risk, vehicle,
+                            item, itemBens);
                         
-                       
+                        logging.setMessage("Generated payload for policy: " + 
+                            polMaster.getPolNo());
                         
+                        // Try import
+                        boolean importSuccess = sendToPortal(json, polMaster.getPolNo());
                         
-                        
-                        if (isValid) {
-                            try {
-                                String json = jsonBuilder.buildPolicyJson(polMaster, risk, vehicle, item,itemBens);
-                                logging.setMessage("generated payload " + json);
-                              
-                                boolean importSuccess = sendToPortal(json, polMaster.getPolNo());
-                                
-                                if (importSuccess) {
-                                    successCount.incrementAndGet();
-                                } else {
-                                    failureCount.incrementAndGet();
-                                }
-                            } catch (Exception e) {
-                                // Log error using LoggingEngine
-                                if (logging != null) {
-                                    logging.setMessage("Failed to import policy " + polMaster.getPolNo() + ": " + e.getMessage());
-                                    
-                                }
-                                failureCount.incrementAndGet();
-                            }
+                        if (importSuccess) {
+                            successCount.incrementAndGet();
                         } else {
-                            // Log warning using LoggingEngine
-                            if (logging != null) {
-                                logging.setMessage("Policy " + polMaster.getPolNo() + " failed validation");
-                                
-                            }
                             failureCount.incrementAndGet();
+                            // Store failed policy for potential retry
+                            result.addFailedPolicy(polMaster.getPolNo(), json, 
+                                "API submission failed");
                         }
                     }
                 }
             }
             
+            result.setTotalProcessed(successCount.get() + failureCount.get());
             result.setSuccessCount(successCount.get());
             result.setFailureCount(failureCount.get());
-            result.setSuccess(true);
+            result.setSuccess(failureCount.get() == 0);
             result.setMessage(String.format("Import completed: %d successful, %d failed", 
                 successCount.get(), failureCount.get()));
             
         } catch (Exception e) {
-            // Log error using LoggingEngine
             if (logging != null) {
                 logging.setMessage("Policy import failed: " + e.getMessage());
-                
             }
             result.setSuccess(false);
             result.setMessage("Import failed: " + e.getMessage());
         } finally {
-            // Close resources properly
             if (em != null && em.isOpen()) {
                 em.close();
             }
@@ -156,49 +137,75 @@ public class PolicyImportService {
     }
     
     private boolean sendToPortal(String json, String policyNumber) 
-            throws AuthenticationException, IOException {
-        
-        CloseableHttpResponse response = null;
+    	    throws AuthenticationException, IOException {
+    	    
+    	    CloseableHttpResponse response = null;
+    	    try {
+    	        System.out.println("Importing policy: " + policyNumber);
+    	        
+    	        response = HttpAuthentication.getPostPolicyToPortalResponse(json);
+    	        HttpEntity body = response.getEntity();
+    	        StatusLine statusLine = response.getStatusLine();
+    	        String content = EntityUtils.toString(body);
+    	        
+    	        if (statusLine.getStatusCode() == HttpCode.CREATED.getCode()|| statusLine.getStatusCode() == HttpCode.OK.getCode()) {
+    	            if (logging != null) {
+    	                logging.setMessage("Successfully imported policy: " + policyNumber);
+    	            }
+    	            return true;
+    	        } else {
+    	            if (logging != null) {
+    	                logging.setMessage("Failed to import policy " + policyNumber + ": " + content);
+    	            }
+    	            
+    	            // Store the failed JSON (could save to file or keep in memory)
+    	            storeFailedJsonLocally(policyNumber, json, content);
+    	            
+    	            return false;
+    	        }
+    	    } catch (IOException e) {
+    	        if (logging != null) {
+    	            logging.setMessage("IO error importing policy " + policyNumber + ": " + e.getMessage());
+    	        }
+    	        
+    	        // Store the failed JSON even on IO exception
+    	        storeFailedJsonLocally(policyNumber, json, e.getMessage());
+    	        
+    	        return false;
+    	    } finally {
+    	        if (response != null) {
+    	            try {
+    	                response.close();
+    	            } catch (IOException e) {
+    	                // Ignore
+    	            }
+    	        }
+    	    }
+    	}
+
+    
+    
+    private void storeFailedJsonLocally(String policyNumber, String json, String error) {
         try {
-        	System.out.println(" importing policy: " + json);
-        	
-            response = HttpAuthentication.getPostPolicyToPortalResponse(json);
-            HttpEntity body = response.getEntity();
-            StatusLine statusLine = response.getStatusLine();
-            String content = EntityUtils.toString(body);
+            String timestamp = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+            String fileName = "failed_" + policyNumber + "_" + timestamp + ".json";
+            java.nio.file.Path dir = java.nio.file.Paths.get("failed_submissions");
+            java.nio.file.Files.createDirectories(dir);
             
-            if (statusLine.getStatusCode() == HttpCode.OK.getCode()) {
-                // Log success using LoggingEngine
-                if (logging != null) {
-                    logging.setMessage("Successfully imported policy: " + policyNumber);
-                    
-                }
-                return true;
-            } else {
-                // Log error using LoggingEngine
-                if (logging != null) {
-                    logging.setMessage("Failed to import policy " + policyNumber + ": " + content);
-                    
-                }
-                return false;
-            }
-        } catch (IOException e) {
-            // Log error using LoggingEngine
-            if (logging != null) {
-                logging.setMessage("IO error importing policy " + policyNumber + ": " + e.getMessage());
-                
-            }
-            return false;
-        } finally {
-            if (response != null) {
-                try {
-                    response.close();
-                } catch (IOException e) {
-                    // Ignore
-                }
-            }
+            String fullRecord = "// ERROR: " + error + "\n" +
+                               "// POLICY: " + policyNumber + "\n" +
+                               "// TIMESTAMP: " + timestamp + "\n" +
+                               json;
+            
+            java.nio.file.Files.write(dir.resolve(fileName), fullRecord.getBytes());
+        } catch (Exception e) {
+            // Log but don't crash
+            System.err.println("Could not save failed JSON: " + e.getMessage());
         }
     }
+
+    
 
     public boolean sendToPortalScheduled(String json, String policyNumber) 
             throws AuthenticationException, IOException {
@@ -242,6 +249,19 @@ public class PolicyImportService {
         if (logging != null) {
             logging.setMessage(message);
             
+        }
+    }
+    
+    
+    
+    public boolean retryPolicySubmission(String policyNumber, String json) {
+        try {
+            return sendToPortal(json, policyNumber);
+        } catch (Exception e) {
+            if (logging != null) {
+                logging.setMessage("Retry failed for policy " + policyNumber + ": " + e.getMessage());
+            }
+            return false;
         }
     }
 }

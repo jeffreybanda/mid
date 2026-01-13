@@ -1,0 +1,63 @@
+// ERROR: {"message":"Invalid request data","meta":"\"vehicles[0].fuelType\" is required","httpStatusCode":400}
+// POLICY: TMPTKD0097222600
+// TIMESTAMP: 20260109_013231
+{
+  "data": {
+    "branchCode": "KD",
+    "intermediaryCode": "AGK0060",
+    "currencyCode": "GHS",
+    "isActive": true,
+    "isFleet": false,
+    "fleetSize": 1,
+    "fleetDiscount": 0.0,
+    "grossPremium": 302.00,
+    "startDate": "2026-01-06",
+    "expiryDate": "2027-01-05",
+    "transactionDate": "2026-01-06",
+    "paymentDate": "2026-01-06",
+    "umbrellaLimit": 0,
+    "companyAssignedPolicyNumber": "TMPTKD0097222600",
+    "customerData": {
+      "isActive": true,
+      "type": "INDIVIDUAL",
+      "firstName": "ISAAC ADU",
+      "lastName": "BEDIAKO ",
+      "gender": "MALE",
+      "dateOfBirth": "1997-01-29",
+      "nationality": "GH",
+      "ghanaCardNumber": "GHA-004488075-8",
+      "phoneNumber": "0555434313",
+      "residentialAddress": "P.O.BOX PMB KUMASI"
+    },
+    "vehicles": [
+      {
+        "registrationNumber": "M-26-AS 443",
+        "make": "KING",
+        "model": "MOTOR KING 150",
+        "manufacturingYear": 2025,
+        "registrationYear": 2025,
+        "chassisNumber": "LAEVA4466SG500788",
+        "vehicleColour": "GREEN",
+        "bodyType": "MOTOR BIKE",
+        "vehicleUsage": "1",
+        "seatingCapacity": 2,
+        "vehicleValue": 0.00,
+        "cubicCapacity": 0,
+        "partsAvailability": false,
+        "verified": false,
+        "productCode": "MTP",
+        "riskTypeCode": "MOTOR_CYCLE",
+        "type": "NEW_BUSINESS",
+        "sumInsured": 0.00,
+        "grossPremium": 302.00,
+        "excessBought": false,
+        "extraTppdl": 0,
+        "fleetDiscount": 0,
+        "umbrellaLimit": 0,
+        "noClaimDiscount": 0,
+        "earnedNoClaimDiscount": 0,
+        "calculationType": "FULL_YEAR"
+      }
+    ]
+  }
+}
